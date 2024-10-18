@@ -6,11 +6,11 @@ require "zlib"
 require "progress"
 
 module Omnigres
-  class Omni < Pgpm::Package
+  class OmniTxn < Pgpm::Package
     include Package
 
     def summary
-      "Advanced adapter for Postgres extensions"
+      "Advanced transaction management"
     end
   end
 end

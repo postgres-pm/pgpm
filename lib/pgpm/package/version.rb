@@ -17,7 +17,7 @@ module Pgpm
       end
 
       def ==(other)
-        other.is_a?(self.class) && to_s == other.to_s
+        to_s == other.to_s
       end
 
       alias eql? ==
@@ -29,7 +29,7 @@ module Pgpm
       end
 
       def hash
-        [self.class, to_s].hash
+        to_s.hash
       end
 
       def satisfies?(range)

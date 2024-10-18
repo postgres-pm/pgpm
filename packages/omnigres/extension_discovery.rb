@@ -67,7 +67,8 @@ module Omnigres
       @@git_revisions[@git.log.first.sha] = last_hashes.each_with_object({}) do |((name, version), sha), result|
         result[name] ||= {}
         result[name][version] = commit_merges[sha]
-      end
+      end.transform_values { |versions| versions.uniq { |_version, merge| merge }.to_h } # Filter out versions that were historical part of the merge
+      @@extensions[@git.log.first.sha] = @@extensions[@git.log.first.sha].map { |name, versions| [name, versions.filter { |v| @@git_revisions[@git.log.first.sha][name].include?(v) }] }.to_h
     end
   end
 end

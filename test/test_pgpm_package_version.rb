@@ -7,6 +7,10 @@ class TestPgpmPackageVersion < Minitest::Test
     assert_equal Pgpm::Package::Version.new("1.2.103").to_s, "1.2.103"
   end
 
+  def test_equality_with_string
+    assert_equal Pgpm::Package::Version.new("1.2.103"), "1.2.103"
+  end
+
   def test_hashes
     assert_equal ({ Pgpm::Package::Version.new("1.2.103") => "yes" }[Pgpm::Package::Version.new("1.2.103")]), "yes"
   end

@@ -10,24 +10,25 @@ PG_BINDIR=$($PG_CONFIG --bindir)
 PG_LIBDIR=$($PG_CONFIG --pkglibdir)
 PGSHAREDIR=$($PG_CONFIG --sharedir)
 
+set -xe
+
 ext_name=$1
 old_ver=$2
 old_ver_path=$3
 new_ver=$4
 new_ver_path=$5
 
-# for now, just for omni
-new_ver_omni_ver=$(cat ${new_ver_path}/versions.txt | grep "^$ext_name=" | cut -d "=" -f 2)
-old_ver_omni_ver=$(cat ${old_ver_path}/versions.txt | grep "^$ext_name=" | cut -d "=" -f 2)
-
-set -xe
+new_ver_omni_ver=$(cat ${new_ver_path}/versions.txt | grep "^omni=" | cut -d "=" -f 2)
+old_ver_omni_ver=$(cat ${old_ver_path}/versions.txt | grep "^omni=" | cut -d "=" -f 2)
 
 # Build the old extension
-PIP_CONFIG_FILE=${new_ver_path}/deps-prev/pip.conf cmake -S "${old_ver_path}/extensions/${ext_name}" -B "${old_ver_path}/build" -DCPM_SOURCE_CACHE=$new_ver_path/deps-prev/_deps -DPG_CONFIG=$PG_CONFIG -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DOPENSSL_CONFIGURED=1
-cmake --build "${old_ver_path}/build" --parallel --target package_omni_extension
-cmake --build "${old_ver_path}/build" --parallel --target package_omni_migrations
-cmake --build "${old_ver_path}/build" --parallel --target package_${ext_name}_extension
-cmake --build "${old_ver_path}/build" --parallel --target package_${ext_name}_migrations
+if [[ -f ${old_ver_path}/cmake/dependencies/CMakeLists.txt ]]; then
+   PIP_CONFIG_FILE=${new_ver_path}/deps-prev/pip.conf cmake -S "${old_ver_path}/extensions/${ext_name}" -B "${old_ver_path}/build" -DCPM_SOURCE_CACHE=$new_ver_path/deps-prev/_deps -DPG_CONFIG=$PG_CONFIG -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DOPENSSL_CONFIGURED=1
+else
+   cmake -S "${old_ver_path}/extensions/${ext_name}" -B "${old_ver_path}/build" -DPG_CONFIG=$PG_CONFIG -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DOPENSSL_CONFIGURED=1
+fi
+cmake --build "${old_ver_path}/build" --parallel --target inja
+cmake --build "${old_ver_path}/build" --parallel --target package_omni_extension --target package_omni_migrations --target package_extensions
 #
 
 file $old_ver_path/build/packaged/omni--$old_ver_omni_ver.so
@@ -38,32 +39,27 @@ extpath=$(cat ${new_ver_path}/build/paths.txt | grep "^$ext_name " | cut -d " " 
 
 # List migrations in new version
 new_migrations=()
-new_migrate_path="$new_ver_path/$extpath/migrate"
+new_migrate_path=$new_ver_path/$extpath/migrate
 if [ -d "$new_migrate_path/$ext_name" ]; then
    # Extension that shares a folder with another extension
    new_migrate_path="$new_migrate_path/$ext_name"
 fi
-for file in "$new_migrate_path/"*.sql; do
+for file in $new_migrate_path/*.sql; do
   new_migrations+=($(basename "$file"))
 done
-
-echo $new_migrations
 
 # Determine the path to the extension in the old version
 extpath=$(cat ${old_ver_path}/build/paths.txt | grep "^$ext_name " | cut -d " " -f 2)
 # List migrations in old version
 old_migrations=()
-old_migrate_path="$old_ver_path/$extpath/migrate"
+old_migrate_path=$old_ver_path/$extpath/migrate
 if [ -d "$old_migrate_path/$ext_name" ]; then
    # Extension that shares a folder with another extension
    old_migrate_path="$old_migrate_path/$ext_name"
 fi
-for file in "$old_migrate_path/"*.sql; do
+for file in $old_migrate_path/*.sql; do
   old_migrations+=($(basename "$file"))
 done
-
-echo $old_migrations
-
 
 for mig in ${new_migrations[@]}; do
   if [ ! -f "$old_migrate_path/$mig" ]; then
