@@ -17,10 +17,17 @@ module Pgpm
             if !git_config.download_version_tags
               super
             else
-              @tags ||=
-                ::Git.ls_remote(git_config.url)["tags"].keys
-                     .filter { |key| !key.end_with?("^{}") }
-                     .filter { |key| key.match?(SEMVER) }
+              git_term_prompt = ENV["GIT_TERMINAL_PROMPT"]
+              ENV["GIT_TERMINAL_PROMPT"] = "0"
+              begin
+                @tags ||=
+                  ::Git.ls_remote(git_config.url)["tags"].keys
+                       .filter { |key| !key.end_with?("^{}") }
+                       .filter { |key| key.match?(SEMVER) }
+              rescue StandardError
+                @tags ||= []
+              end
+              ENV["GIT_TERMINAL_PROMPT"] = git_term_prompt
               versions = @tags.map { |tag| tag.gsub(/^v/, "") }.map { |v| Pgpm::Package::Version.new(v) }
               @tag_versions = Hash[@tags.zip(versions)]
               @version_tags = Hash[versions.zip(@tags)]
