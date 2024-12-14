@@ -11,13 +11,16 @@ module Pgpm
         attr_reader :git_config
 
         module Methods
+          SEMVER = /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
+
           def package_versions
             if !git_config.download_version_tags
               super
             else
               @tags ||=
                 ::Git.ls_remote(git_config.url)["tags"].keys
-                     .filter { |key| !key.match?(/.+\^{}$/) }
+                     .filter { |key| !key.end_with?("^{}") }
+                     .filter { |key| key.match?(SEMVER) }
               versions = @tags.map { |tag| tag.gsub(/^v/, "") }.map { |v| Pgpm::Package::Version.new(v) }
               @tag_versions = Hash[@tags.zip(versions)]
               @version_tags = Hash[versions.zip(@tags)]
