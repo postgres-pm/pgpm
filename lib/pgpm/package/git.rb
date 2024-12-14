@@ -74,6 +74,10 @@ module Pgpm
         end
       end
 
+      def release_date
+        ::Git.open(source).log.first.date
+      end
+
       def self.included(base_class)
         base_class.extend(ClassMethods)
       end

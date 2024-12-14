@@ -19,6 +19,8 @@ module Pgpm
         "TODO: license"
       end
 
+      def release_date; end
+
       def broken?
         requires.any?(&:broken?)
       end
