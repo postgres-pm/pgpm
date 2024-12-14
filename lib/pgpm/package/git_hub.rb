@@ -25,11 +25,11 @@ module Pgpm
       module ClassMethods
         attr_reader :github_config
 
-        def github(name, download_version_tags: true)
+        def github(name, download_version_tags: true, tag_prefix: /v?/)
           @github_config = Config.new(name:, download_version_tags:)
           include Pgpm::Package::Git
           include Methods
-          git "https://github.com/#{@github_config.name}", download_version_tags:
+          git "https://github.com/#{@github_config.name}", download_version_tags:, tag_prefix:
         end
       end
 

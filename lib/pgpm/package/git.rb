@@ -5,30 +5,32 @@ require "git"
 module Pgpm
   class Package
     module Git
-      Config = Data.define(:url, :download_version_tags)
+      Config = Data.define(:url, :download_version_tags, :tag_prefix)
 
       module ClassMethods
         attr_reader :git_config
 
         module Methods
-          SEMVER = /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
+          SEMVER = /(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
 
           def package_versions
             if !git_config.download_version_tags
               super
             else
+              prefix_re = Regexp.quote(git_config.tag_prefix.to_s)
+              prefix_re = git_config.tag_prefix if git_config.tag_prefix.is_a?(Regexp)
               git_term_prompt = ENV["GIT_TERMINAL_PROMPT"]
               ENV["GIT_TERMINAL_PROMPT"] = "0"
               begin
                 @tags ||=
                   ::Git.ls_remote(git_config.url)["tags"].keys
                        .filter { |key| !key.end_with?("^{}") }
-                       .filter { |key| key.match?(SEMVER) }
+                       .filter { |key| key.match?(/^(#{prefix_re})#{SEMVER}/) }
               rescue StandardError
                 @tags ||= []
               end
               ENV["GIT_TERMINAL_PROMPT"] = git_term_prompt
-              versions = @tags.map { |tag| tag.gsub(/^v/, "") }.map { |v| Pgpm::Package::Version.new(v) }
+              versions = @tags.map { |tag| tag.gsub(/^(#{prefix_re})/, "") }.map { |v| Pgpm::Package::Version.new(v) }
               @tag_versions = Hash[@tags.zip(versions)]
               @version_tags = Hash[versions.zip(@tags)]
               versions
@@ -36,8 +38,8 @@ module Pgpm
           end
         end
 
-        def git(url, download_version_tags: true)
-          @git_config = Config.new(url:, download_version_tags:)
+        def git(url, download_version_tags: true, tag_prefix: /v?/)
+          @git_config = Config.new(url:, download_version_tags:, tag_prefix:)
           extend Methods
         end
       end
