@@ -25,23 +25,23 @@ module Pgpm
 
       module ClassMethods
         def extension_name
-          self[:latest].extension_name
+          self[:latest]&.extension_name
         end
 
         def description
-          self[:latest].description
+          self[:latest]&.description
         end
 
         def summary
-          self[:latest].summary
+          self[:latest]&.summary
         end
 
         def license
-          self[:latest].license
+          self[:latest]&.license
         end
 
         def all_searchable_texts
-          self[:latest].all_searchable_texts
+          self[:latest]&.all_searchable_texts || []
         end
       end
 
