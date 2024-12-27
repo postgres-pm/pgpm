@@ -78,7 +78,7 @@ module Pgpm
                  end
 
           pgver = Package::Version.new(pgver)
-          matching_pgver = Postgres::Distribution.versions.find { |v| v.satisfies?(">= #{pgver}") && v.satisfies?("< #{pgver.major + 1}") }
+          matching_pgver = Postgres::Distribution.versions.sort.reverse.find { |v| v.satisfies?(">= #{pgver}") && v.satisfies?("< #{pgver.major + 1}") }
           unless matching_pgver
             puts "#{pgver} is not a known Postgres version"
             exit(1)
