@@ -40,7 +40,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "progress", "~> 3.6.0"
   spec.add_dependency "semver_dialects", "~> 3.4.3"
   spec.add_dependency "tty-command", "~> 0.10.1"
-  spec.add_dependency "xdg", "~> 8.7.0"
+  spec.add_dependency "xdg", "~> 9.0.0"
   spec.add_dependency "zeitwerk", "~> 2.6.18"
   spec.add_dependency "zlib", "~> 3.1.1"
 
