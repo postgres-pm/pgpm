@@ -14,3 +14,5 @@ gem "rubocop", "~> 1.21"
 gem "debug", "~> 1.9"
 
 gem "rbs", "~> 3.6"
+
+gem "csv", "~> 3.3"
