@@ -42,6 +42,10 @@ module Pgpm
           self[:latest]&.license
         end
 
+        def release_date
+          self[:latest]&.release_date
+        end
+
         def all_searchable_texts
           self[:latest]&.all_searchable_texts || []
         end

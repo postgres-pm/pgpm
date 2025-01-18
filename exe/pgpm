@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+require "English"
 require "bundler/setup"
 require "pgpm"
 require "dry/cli"
@@ -117,21 +118,44 @@ module Pgpm
         include SharedOptions
 
         argument :query, type: :string, default: ".*", desc: "Search query"
+        option :format, values: %w[text json], default: "text", desc: "Output format", aliases: ["-f"]
 
-        def call(query:, args: nil, pkgdir: nil)
+        def call(query:, args: nil, pkgdir: nil, format: nil)
           _ = args
 
           Pgpm.load_packages(pkgdir)
 
           query_regexp = Regexp.new(query, "i")
+          if format == "json"
+            puts "["
+          end
+
           Parallel.filter_map(Pgpm::Package, in_threads: Etc.nprocessors) do |p|
             next if p.contrib?
 
-            matches = p.all_searchable_texts.any? do |t|
+            p.all_searchable_texts.any? do |t|
               t =~ query_regexp
             end
-            "#{p.package_name}: #{p.description}" if matches
-          end.each { |l| puts l }
+            output = case format
+                     when "json" then Oj.dump({
+                                                name: p.package_name,
+                                                summary: p.summary,
+                                                description: p.description,
+                                                license: p.license,
+                                                versions: p.package_versions.map(&:to_s)
+                                              }, mode: :strict)
+                     else
+                       "#{p.package_name}: #{p.description}"
+                     end
+            # printer.send(output, move: true) if matches
+            puts output
+          rescue StandardError
+            warn "Error fetching #{p.package_name}: #{$ERROR_INFO.message}"
+          end
+
+          return unless format == "json"
+
+          puts "]"
         end
       end
 
