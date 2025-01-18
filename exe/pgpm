@@ -147,7 +147,6 @@ module Pgpm
                      else
                        "#{p.package_name}: #{p.description}"
                      end
-            # printer.send(output, move: true) if matches
             puts output
           rescue StandardError
             warn "Error fetching #{p.package_name}: #{$ERROR_INFO.message}"
