@@ -5,7 +5,7 @@ require "git"
 module Pgpm
   class Package
     module Git
-      Config = Data.define(:url, :download_version_tags, :tag_prefix)
+      Config = Data.define(:url, :download_version_tags, :tag_prefix, :version_pattern)
 
       module ClassMethods
         attr_reader :git_config
@@ -25,7 +25,7 @@ module Pgpm
                 @tags ||=
                   ::Git.ls_remote(git_config.url)["tags"].keys
                        .filter { |key| !key.end_with?("^{}") }
-                       .filter { |key| key.match?(/^(#{prefix_re})#{SEMVER}/) }
+                       .filter { |key| key.match?(/^(#{prefix_re})#{git_config.version_pattern || SEMVER}/) }
               rescue StandardError
                 @tags ||= []
               end
@@ -38,8 +38,8 @@ module Pgpm
           end
         end
 
-        def git(url, download_version_tags: true, tag_prefix: /v?/)
-          @git_config = Config.new(url:, download_version_tags:, tag_prefix:)
+        def git(url, download_version_tags: true, tag_prefix: /v?/, version_pattern: nil)
+          @git_config = Config.new(url:, download_version_tags:, tag_prefix:, version_pattern:)
           extend Methods
         end
       end
