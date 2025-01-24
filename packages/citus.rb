@@ -17,6 +17,6 @@ class Citus < Pgpm::Package
 
   def broken?
     # https://github.com/citusdata/citus/issues/7708
-    Pgpm::Postgres::Distribution.in_scope.major_version > 16
+    version < 13 && Pgpm::Postgres::Distribution.in_scope.major_version > 16
   end
 end
