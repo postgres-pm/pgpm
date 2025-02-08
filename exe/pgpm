@@ -85,6 +85,10 @@ module Pgpm
             exit(1)
           end
 
+          unless os.is_a?(Pgpm::OS::RedHat)
+            puts "#{os.name} is not a supported OS at this moment"
+            exit(1)
+          end
           puts "Building #{pkgs.map { |p| "#{p.name}@#{p.version}" }.join(", ")} for Postgres #{matching_pgver}"
           selected_pgdist = Postgres::RedhatBasedPgdg.new(matching_pgver.to_s)
 

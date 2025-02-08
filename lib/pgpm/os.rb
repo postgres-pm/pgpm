@@ -37,9 +37,12 @@ module Pgpm
     end
 
     def self.auto_detect
-      return unless RUBY_PLATFORM =~ /linux$/
-
-      Pgpm::OS::Linux.auto_detect
+      if RUBY_PLATFORM =~ /linux$/
+        Pgpm::OS::Linux.auto_detect
+      else
+        RUBY_PLATFORM =~ /darwin/
+        Pgpm::OS::Darwin.auto_detect
+      end
     end
 
     def self.find(name)
