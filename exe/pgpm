@@ -34,7 +34,7 @@ module Pgpm
 
         include SharedOptions
 
-        option :os, type: :string, default: Pgpm::OS.auto_detect.name, desc: "OS name"
+        option :os, type: :string, default: Pgpm::OS.auto_detect&.name, desc: "OS name"
         option :arch, type: :string, default: Pgpm::Arch.host.name, desc: "Target architecture"
         option :pgdist, type: :string, default: "pgdg", desc: "Target Postgres distribution"
         option :pgver, type: :string, default: Pgpm::Postgres::Distribution.versions.last.to_s, desc: "Target Postgres version"
@@ -71,7 +71,7 @@ module Pgpm
             pkg
           end
 
-          os = Pgpm::OS.auto_detect
+          os = os ? Pgpm::OS.find(os) : Pgpm::OS.auto_detect
           arch = if arch
                    Pgpm::Arch.new(arch)
                  else

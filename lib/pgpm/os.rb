@@ -42,6 +42,10 @@ module Pgpm
       Pgpm::OS::Linux.auto_detect
     end
 
+    def self.find(name)
+      Base.all_subclasses.find { |klass| klass.name == name }&.new
+    end
+
     def self.in_scope
       LSpace[:pgpm_target_operating_system]
     end

@@ -12,10 +12,13 @@ module Pgpm
           ]
           args.push("--sources", sources) if sources
           args.push("-r", config.to_s) unless config.nil?
-          new(*args, cb: lambda {
+          paths = [buffer_result_dir]
+          paths.push(File.dirname(spec))
+          paths.push(File.dirname(sources)) if sources
+          new(*args, paths:, cb: lambda {
             rpms = Dir.glob("*.rpm", base: buffer_result_dir).map do |f|
               FileUtils.cp(Pathname(buffer_result_dir).join(f), result_dir) unless result_dir.nil?
-              f
+              File.join(File.absolute_path(result_dir), f)
             end
             FileUtils.rm_rf(buffer_result_dir)
             cb.call unless cb.nil?
@@ -29,12 +32,14 @@ module Pgpm
             "--rebuild", "--chain", "--recurse", srpm, "--localrepo", buffer_result_dir
           ]
           args.push("-r", config.to_s) unless config.nil?
-          new(*args, cb: lambda {
+          paths = [buffer_result_dir]
+          paths.push(File.dirname(srpm))
+          new(*args, paths:, cb: lambda {
             # Here we glob for **/*.rpm as ``--localrepo` behaves differently from
             # `--resultdir`
             rpms = Dir.glob("**/*.rpm", base: buffer_result_dir).map do |f|
               FileUtils.cp(Pathname(buffer_result_dir).join(f), result_dir) unless result_dir.nil?
-              f
+              File.join(File.absolute_path(result_dir), f)
             end
             FileUtils.rm_rf(buffer_result_dir)
             cb.call unless cb.nil?
@@ -42,9 +47,10 @@ module Pgpm
           })
         end
 
-        def initialize(*args, opts: nil, cb: nil)
+        def initialize(*args, opts: nil, paths: [], cb: nil)
           @args = args
           @cb = cb
+          @paths = paths
           @opts = opts || { "print_main_output" => "True", "pgdg_version" => Postgres::Distribution.in_scope.major_version }
         end
 
@@ -53,7 +59,8 @@ module Pgpm
         def call
           options = @opts.flat_map { |(k, v)| ["--config-opts", "#{k}=#{v}"] }.compact.join(" ")
           command = "mock #{options} #{@args.join(" ")}"
-          raise "Failed to execute `#{command}`" unless system command
+          map_paths = @paths.map { |p| "-v #{p}:#{p}" }.join(" ")
+          raise "Failed to execute `#{command}`" unless Podman.run("run -v #{Dir.pwd}:#{Dir.pwd} #{map_paths} --privileged -ti ghcr.io/postgres-pm/pgpm #{command}")
 
           @cb&.call
         end

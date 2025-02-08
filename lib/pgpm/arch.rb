@@ -14,7 +14,7 @@ module Pgpm
     end
 
     def initialize(name)
-      @name = name
+      @name = name == "arm64" ? "aarch64" : name
     end
 
     attr_reader :name
