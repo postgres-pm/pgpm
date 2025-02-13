@@ -137,9 +137,10 @@ module Pgpm
           Parallel.filter_map(Pgpm::Package, in_threads: Etc.nprocessors) do |p|
             next if p.contrib?
 
-            p.all_searchable_texts.any? do |t|
+            found = p.all_searchable_texts.any? do |t|
               t =~ query_regexp
             end
+            next unless found
             output = case format
                      when "json" then Oj.dump({
                                                 name: p.package_name,
