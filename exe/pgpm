@@ -141,6 +141,7 @@ module Pgpm
               t =~ query_regexp
             end
             next unless found
+
             output = case format
                      when "json" then Oj.dump({
                                                 name: p.package_name,
