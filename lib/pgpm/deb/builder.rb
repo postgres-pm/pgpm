@@ -14,10 +14,10 @@ module Pgpm
         puts "build()"
         prepare
         generate_deb_src_files
-        #create_container
+        create_container
         #run_pbuilder
         #copy_build_from_container
-        #cleanup
+        cleanup
       end
 
       private
@@ -73,6 +73,24 @@ module Pgpm
       end
 
       def cleanup
+        puts "Cleaning up..."
+
+        # Stop and destroy podman container
+        puts "  Stopping podman container: #{@container_name}"
+        system("podman stop #{@container_name}")
+        puts "  Destroying podman container: #{@container_name}"
+        system("podman container rm #{@container_name}")
+
+        # Remove temporary files
+        #
+        # Make sure @pgpm_dir starts with "/tmp/" or we may accidentally
+        # delete something everything! You can never be sure!
+        if @pgpm_dir.start_with?("/tmp/")
+          puts "  Removing temporary files in #{@pgpm_dir}"
+          FileUtils.rm_rf(@pgpm_dir)
+        else
+          puts "WARNING: will not remove temporary files, strange path: \"#{@pgpm_dir}\""
+        end
       end
 
       # Needed because SELinux requires :z suffix for mounted directories to
