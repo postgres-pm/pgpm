@@ -2,6 +2,7 @@
 
 require "digest"
 require "open-uri"
+require "erb"
 
 module Pgpm
   module Deb
@@ -19,23 +20,54 @@ module Pgpm
         @package.sources
       end
 
-      def generate_control
+      def generate(template_name)
+        fn = "#{__dir__}/templates/#{template_name}.erb"
+        raise "No such template: #{fn}" unless File.exist?(fn)
+        erb = ERB.new(File.read(fn))
+        erb.result(binding)
       end
 
-      def generate_rules
+      def deps
+        ["postgresql-#{postgres_version}"]
       end
 
-      def generate_licence
+      def build_deps
+        [
+          "postgresql-#{postgres_version}",
+          "build-essential",
+          "postgresql-#{postgres_version}",
+          "postgresql-server-dev-#{postgres_version}",
+          "postgresql-common"
+        ]
       end
 
-      def generate_version
+      def postgres_version
+        17
       end
 
-      private
+      def source_version
+        @package.version.to_s
+      end
 
-      def unpack?(src)
-        src = src.name if src.respond_to?(:name)
-        src.to_s.end_with?(".tar.gz") || src.to_s.end_with?(".tar.xz")
+      def source_name
+        @package.name
+      end
+
+      def deb_version
+        "0.1.0"
+      end
+
+      def arch
+        "amd64"
+      end
+
+      def description
+        @package.description
+      end
+
+      # Whatever is returned from this method gets added to the "rules" file.
+      def rules_amendments
+        "#"
       end
 
     end

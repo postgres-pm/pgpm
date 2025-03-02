@@ -13,8 +13,8 @@ module Pgpm
       def build
         puts "build()"
         prepare
-        #generate_deb_src_files
-        create_container
+        generate_deb_src_files
+        #create_container
         #run_pbuilder
         #copy_build_from_container
         #cleanup
@@ -54,11 +54,13 @@ module Pgpm
       end
 
       def generate_deb_src_files
-        @spec.generate_rules
-        @spec.generate_control
-        @spec.generate_licence
-        @spec.generate_version
-        # save generated content into actual files
+        puts "Generating debian files..."
+        Dir.mkdir "#{@pgpm_dir}/debian"
+        [:changelog, :control, :copyright, :files, :rules].each do |f|
+          puts "  -> #{@pgpm_dir}/debian/#{f}"
+          File.write "#{@pgpm_dir}/debian/#{f}", @spec.generate(f)
+        end
+        File.chmod 0740, "#{@pgpm_dir}/debian/rules" # rules file must be executable
       end
 
       def run_pbuilder
