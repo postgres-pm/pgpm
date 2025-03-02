@@ -15,8 +15,8 @@ module Pgpm
         prepare
         generate_deb_src_files
         create_container
-        #run_pbuilder
-        #copy_build_from_container
+        run_pbuilder
+        copy_build_from_container
         cleanup
       end
 
@@ -45,7 +45,7 @@ module Pgpm
 
         create_opts = " -v #{@pgpm_dir}:/root/pgpm"
         create_opts += ":z" if selinux_enabled?
-        create_opts += " --privileged"
+        create_opts += " --privileged --annotation run.oci.keep_original_groups=1"
         create_opts += " --name #{@container_name} #{@image_name}"
 
         puts "  Creating and starting container #{@container_name}"
@@ -55,18 +55,31 @@ module Pgpm
 
       def generate_deb_src_files
         puts "Generating debian files..."
-        Dir.mkdir "#{@pgpm_dir}/debian"
+        Dir.mkdir "#{@pgpm_dir}/source/debian"
         [:changelog, :control, :copyright, :files, :rules].each do |f|
-          puts "  -> #{@pgpm_dir}/debian/#{f}"
-          File.write "#{@pgpm_dir}/debian/#{f}", @spec.generate(f)
+          puts "  -> #{@pgpm_dir}/source/debian/#{f}"
+          File.write "#{@pgpm_dir}/source/debian/#{f}", @spec.generate(f)
         end
-        File.chmod 0740, "#{@pgpm_dir}/debian/rules" # rules file must be executable
+        File.chmod 0740, "#{@pgpm_dir}/source/debian/rules" # rules file must be executable
       end
 
       def run_pbuilder
+        puts "Building a .deb package with pbuilder..."
+        cmd_pref = "podman exec -w /root/pgpm/source #{@container_name} "
+        system("#{cmd_pref} dpkg-buildpackage --build=source")
+        exit(1) if $?.to_i > 0
+        dsc_fn = "#{@spec.package.name}-#{@spec.package.version.to_s}_0-1.dsc"
+        system("#{cmd_pref} fakeroot pbuilder build ../#{dsc_fn}")
+        exit(1) if $?.to_i > 0
       end
 
       def copy_build_from_container
+        puts "Moving .deb file from podman container into current directory..."
+        cmd_pref = "podman exec #{@container_name} "
+        arch = "amd64"
+        deb_fn = "#{@spec.full_pkg_name}.deb"
+        system("#{cmd_pref} mv /var/cache/pbuilder/result/#{deb_fn} /root/pgpm/out/")
+        FileUtils.mv("#{@pgpm_dir}/out/#{deb_fn}", Dir.pwd)
       end
 
       def run_container_command(cmd)

@@ -53,6 +53,10 @@ module Pgpm
         @package.name
       end
 
+      def full_pkg_name
+        "#{@package.name}-#{@package.version.to_s}_0-1_#{arch}"
+      end
+
       def deb_version
         "0.1.0"
       end
