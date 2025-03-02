@@ -6,7 +6,7 @@ module Pgpm
 
       def initialize(spec)
         @spec = spec
-        @image_name = "pgpm-debian12"
+        @image_name = "quay.io/qount25/pgpm-debian12"
         @container_name = "pgpm-debian12_build-#{Time.now.to_i}_#{rand(10000)}"
       end
 
@@ -38,7 +38,7 @@ module Pgpm
         system("podman image exists #{@image_name}")
         if $?.to_i > 0 # image doesn't exist -- pull image from a remote repository
           puts "  Pulling image #{@image_name}..."
-          # TODO
+          system("podman pull quay.io/qount25/pgpm-debian12")
         else
           puts "  Image #{@image_name} already exists! OK"
         end
