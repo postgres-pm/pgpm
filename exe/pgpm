@@ -99,7 +99,6 @@ module Pgpm
                     p = Pgpm::ScopedObject.new(p, os, arch)
                     spec = p.to_deb_spec
                   end
-binding.break
                   builder = Pgpm::Deb::Builder.new(spec)
                   builder.build
                 end
