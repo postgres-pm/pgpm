@@ -6,12 +6,10 @@ module Pgpm
 
       def initialize(spec)
         @spec = spec
-        @image_name = "quay.io/qount25/pgpm-debian12"
         @container_name = "pgpm-debian12_build-#{Time.now.to_i}_#{rand(10000)}"
       end
 
       def build
-        puts "build()"
         prepare
         generate_deb_src_files
         create_container
@@ -21,6 +19,11 @@ module Pgpm
       end
 
       private
+
+      # Depends on postgres version and arch
+      def image_name
+        "quay.io/qount25/pgpm-debian-pg#{@spec.postgres_major_version}-#{@spec.arch}"
+      end
 
       def prepare
         puts "Preparing build..."
@@ -35,18 +38,18 @@ module Pgpm
       def create_container
         puts "Creating a podman container..."
         # Check if image exists
-        system("podman image exists #{@image_name}")
+        system("podman image exists #{image_name}")
         if $?.to_i > 0 # image doesn't exist -- pull image from a remote repository
-          puts "  Pulling image #{@image_name}..."
+          puts "  Pulling image #{image_name}..."
           system("podman pull quay.io/qount25/pgpm-debian12")
         else
-          puts "  Image #{@image_name} already exists! OK"
+          puts "  Image #{image_name} already exists! OK"
         end
 
         create_opts = " -v #{@pgpm_dir}:/root/pgpm"
         create_opts += ":z" if selinux_enabled?
         create_opts += " --privileged --annotation run.oci.keep_original_groups=1"
-        create_opts += " --name #{@container_name} #{@image_name}"
+        create_opts += " --name #{@container_name} #{image_name}"
 
         puts "  Creating and starting container #{@container_name}"
         puts "    podman run -dti #{create_opts}"
@@ -76,7 +79,6 @@ module Pgpm
       def copy_build_from_container
         puts "Moving .deb file from podman container into current directory..."
         cmd_pref = "podman exec #{@container_name} "
-        arch = "amd64"
         deb_fn = "#{@spec.full_pkg_name}.deb"
         system("#{cmd_pref} mv /var/cache/pbuilder/result/#{deb_fn} /root/pgpm/out/")
         FileUtils.mv("#{@pgpm_dir}/out/#{deb_fn}", Dir.pwd)

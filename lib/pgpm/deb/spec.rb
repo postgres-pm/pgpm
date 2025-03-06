@@ -28,45 +28,33 @@ module Pgpm
       end
 
       def deps
-        ["postgresql-#{postgres_version}"]
+        ["postgresql-#{postgres_major_version}"]
       end
 
       def build_deps
         [
-          "postgresql-#{postgres_version}",
+          "postgresql-#{postgres_major_version}",
           "build-essential",
-          "postgresql-#{postgres_version}",
-          "postgresql-server-dev-#{postgres_version}",
+          "postgresql-#{postgres_major_version}",
+          "postgresql-server-dev-#{postgres_major_version}",
           "postgresql-common"
         ]
       end
 
-      def postgres_version
-        17
+      def postgres_major_version
+        @spec.postgres_distribution.version.split(".")[0]
       end
 
       def source_version
         @package.version.to_s
       end
 
-      def source_name
-        @package.name
-      end
-
       def full_pkg_name
         "#{@package.name}-#{@package.version.to_s}_0-1_#{arch}"
       end
 
-      def deb_version
-        "0.1.0"
-      end
-
       def arch
         "amd64"
-      end
-
-      def description
-        @package.description
       end
 
       # Whatever is returned from this method gets added to the "rules" file.
