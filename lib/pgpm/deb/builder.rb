@@ -6,14 +6,14 @@ module Pgpm
 
       def initialize(spec)
         @spec = spec
-        @container_name = "pgpm-debian12_build-#{Time.now.to_i}_#{rand(10000)}"
+        @container_name = "pgpm-debian_build-#{Time.now.to_i}_#{rand(10000)}"
       end
 
       def build
         prepare
         generate_deb_src_files
-        create_container
-        run_pbuilder
+        pull_image
+        run_build
         copy_build_from_container
         cleanup
       end
@@ -35,25 +35,16 @@ module Pgpm
         FileUtils.copy_entry @spec.package.source.to_s, "#{@pgpm_dir}/source/"
       end
 
-      def create_container
-        puts "Creating a podman container..."
+      def pull_image
+        puts "Checking if podman image exists..."
         # Check if image exists
         system("podman image exists #{image_name}")
         if $?.to_i > 0 # image doesn't exist -- pull image from a remote repository
-          puts "  Pulling image #{image_name}..."
+          puts "  No. Pulling image #{image_name}..."
           system("podman pull quay.io/qount25/pgpm-debian12")
         else
-          puts "  Image #{image_name} already exists! OK"
+          puts "  Yes, image #{image_name} already exists! OK"
         end
-
-        create_opts = " -v #{@pgpm_dir}:/root/pgpm"
-        create_opts += ":z" if selinux_enabled?
-        create_opts += " --privileged --annotation run.oci.keep_original_groups=1"
-        create_opts += " --name #{@container_name} #{image_name}"
-
-        puts "  Creating and starting container #{@container_name}"
-        puts "    podman run -dti #{create_opts}"
-        system("podman run -dti #{create_opts}")
       end
 
       def generate_deb_src_files
@@ -66,25 +57,31 @@ module Pgpm
         File.chmod 0740, "#{@pgpm_dir}/source/debian/rules" # rules file must be executable
       end
 
-      def run_pbuilder
-        puts "Building a .deb package with pbuilder..."
-        cmd_pref = "podman exec -w /root/pgpm/source #{@container_name} "
-        system("#{cmd_pref} dpkg-buildpackage --build=source")
-        exit(1) if $?.to_i > 0
+      def run_build
+        # podman run options
+        create_opts = " -v #{@pgpm_dir}:/root/pgpm"
+        create_opts += ":z" if selinux_enabled?
+        create_opts += " --privileged --annotation run.oci.keep_original_groups=1"
+        create_opts += " --name #{@container_name} #{image_name}"
+
         dsc_fn = "#{@spec.package.name}-#{@spec.package.version.to_s}_0-1.dsc"
-        system("#{cmd_pref} fakeroot pbuilder build ../#{dsc_fn}")
+        deb_fn = "#{@spec.full_pkg_name}.deb"
+
+        # commands to run
+        cmds = " /bin/bash -c 'cd /root/pgpm/source"
+        cmds += " && dpkg-buildpackage --build=source"
+        cmds += " && fakeroot pbuilder build ../#{dsc_fn}"
+        cmds += " && mv /var/cache/pbuilder/result/#{deb_fn} /root/pgpm/out/'"
+
+        puts "  Creating and starting container #{@container_name} & running pbuilder"
+        system("podman run -it #{create_opts} #{cmds}")
         exit(1) if $?.to_i > 0
       end
 
       def copy_build_from_container
         puts "Moving .deb file from podman container into current directory..."
-        cmd_pref = "podman exec #{@container_name} "
         deb_fn = "#{@spec.full_pkg_name}.deb"
-        system("#{cmd_pref} mv /var/cache/pbuilder/result/#{deb_fn} /root/pgpm/out/")
         FileUtils.mv("#{@pgpm_dir}/out/#{deb_fn}", Dir.pwd)
-      end
-
-      def run_container_command(cmd)
       end
 
       def cleanup

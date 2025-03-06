@@ -42,7 +42,7 @@ module Pgpm
       end
 
       def postgres_major_version
-        @spec.postgres_distribution.version.split(".")[0]
+        self.postgres_distribution.version.split(".")[0]
       end
 
       def source_version

@@ -7,7 +7,6 @@ module Pgpm
     def initialize(obj, *scopes)
       @scopes = scopes
       super(obj)
-binding.break
     end
 
     def method_missing(method, *args, &block)

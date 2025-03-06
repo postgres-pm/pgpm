@@ -9,7 +9,6 @@ module Pgpm
       end
 
       def to_deb_spec(**opts)
-binding.break
         Pgpm::Deb::Spec.new(self, **opts)
       end
 
