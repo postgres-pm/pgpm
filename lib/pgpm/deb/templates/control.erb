@@ -1,0 +1,13 @@
+Source: <%= self.package.name %>-<%= source_version %>
+Section: libs
+Priority: optional
+Maintainer: PGPM Debian maintainer <debian.maintainer@pgpm.org>
+Rules-Requires-Root: no
+Build-Depends: debhelper-compat (= 13), <%= build_deps.join(", ") %>
+Standards-Version: 4.6.2
+
+Package: <%= self.package.name %>-<%= source_version %>
+Depends: <%= deps.join(", ") %>
+Section: libdevel
+Architecture: <%= arch %>
+Description: <%= self.package.description %>
