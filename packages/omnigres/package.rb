@@ -291,15 +291,13 @@ module Omnigres
       return if @prerequisites_installed
 
       @os = Pgpm::OS.auto_detect
-      if @os.is_a?(Pgpm::OS::RedHat)
-        images = Oj.load(Pgpm::Podman.run("images --format json", print_stdout: false))
-        unless images.flat_map { |i| i["Names"] }.include?("localhost/#{PGPM_BUILD_CONTAINER_IMAGE}:latest")
-          tmpfile = Tempfile.new
-          Pgpm::Podman.run "run -ti --cidfile #{tmpfile.path} #{PGPM_BUILD_CONTAINER}"
-          id = File.read(tmpfile.path)
-          tmpfile.unlink
-          Pgpm::Podman.run "commit #{id} #{PGPM_BUILD_CONTAINER_IMAGE}"
-        end
+      images = Oj.load(Pgpm::Podman.run("images --format json", print_stdout: false))
+      unless images.flat_map { |i| i["Names"] }.include?("localhost/#{PGPM_BUILD_CONTAINER_IMAGE}:latest")
+        tmpfile = Tempfile.new
+        Pgpm::Podman.run "run -ti --cidfile #{tmpfile.path} #{PGPM_BUILD_CONTAINER}"
+        id = File.read(tmpfile.path)
+        tmpfile.unlink
+        Pgpm::Podman.run "commit #{id} #{PGPM_BUILD_CONTAINER_IMAGE}"
       end
       @prerequisites_installed = true
     end
