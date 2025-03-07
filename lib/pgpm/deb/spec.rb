@@ -54,7 +54,14 @@ module Pgpm
       end
 
       def arch
-        "amd64"
+        # https://memgraph.com/blog/ship-it-on-arm64-or-is-it-aarch64
+        # Debian suffixes are "amd64" and "arm64". Here we translate:
+        case Pgpm::Arch.host.name
+          when "amd64", "x86_64"
+            "amd64"
+          when "aarch64", "arm64"
+            "arm64"
+        end
       end
 
       # Whatever is returned from this method gets added to the "rules" file.
