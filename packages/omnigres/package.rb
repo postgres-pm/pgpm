@@ -67,9 +67,11 @@ module Omnigres
 
     def configure_steps
       extra_config = contains_vendorized_deps? ? "" : "-DCPM_SOURCE_CACHE=$(pwd)/deps/_deps "
-      ["export PIP_CONFIG_FILE=$(pwd)/deps/pip.conf",
-       "cmake -S #{extension_path} -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo " \
-         "-DOPENSSL_CONFIGURED=1 -DPG_CONFIG=$PG_CONFIG #{extra_config} -DCMAKE_POSITION_INDEPENDENT_CODE=ON"]
+      steps = ["export PIP_CONFIG_FILE=$(pwd)/deps/pip.conf",
+               "cmake -S #{extension_path} -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo " \
+                 "-DOPENSSL_CONFIGURED=1 -DPG_CONFIG=$PG_CONFIG #{extra_config} -DCMAKE_POSITION_INDEPENDENT_CODE=ON"]
+      steps.unshift("source /opt/rh/gcc-toolset-14/enable") if Pgpm::OS.in_scope.is_a?(Pgpm::OS::RedHat)
+      steps
     end
 
     def build_steps
@@ -106,7 +108,9 @@ module Omnigres
     end
 
     def build_dependencies
-      %w[cmake openssl-devel python3 python3-devel nc sudo git] + super
+      deps = %w[cmake openssl-devel python3 python3-devel nc sudo git] + super
+      deps.push("gcc-toolset-14") if Pgpm::OS.in_scope.is_a?(Pgpm::OS::RedHat)
+      deps
     end
 
     def dependencies
