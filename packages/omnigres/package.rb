@@ -222,6 +222,7 @@ module Omnigres
 
       @srcs = super
       return @srcs if @dont_fetch_previous
+
       unless contains_vendorized_deps?
         @srcs.push(deps_tar_gz)
       end
