@@ -41,7 +41,7 @@ module Pgpm
         system("podman image exists #{image_name}")
         if $?.to_i > 0 # image doesn't exist -- pull image from a remote repository
           puts "  No. Pulling image #{image_name}..."
-          system("podman pull quay.io/qount25/pgpm-debian12")
+          system("podman pull #{image_name}")
         else
           puts "  Yes, image #{image_name} already exists! OK"
         end
@@ -87,9 +87,6 @@ module Pgpm
       def cleanup
         puts "Cleaning up..."
 
-        # Stop and destroy podman container
-        puts "  Stopping podman container: #{@container_name}"
-        system("podman stop #{@container_name}")
         puts "  Destroying podman container: #{@container_name}"
         system("podman container rm #{@container_name}")
 
