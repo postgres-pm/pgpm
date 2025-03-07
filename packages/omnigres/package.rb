@@ -208,21 +208,23 @@ module Omnigres
       end
     end
 
-    def original_sources
-      method(:sources).super_method.call
+    def dont_fetch_previous
+      @dont_fetch_previous = true
+      self
     end
 
     def sources
       return @srcs if @srcs
 
-      @srcs = original_sources
+      @srcs = super
+      return @srcs if @dont_fetch_previous
       unless contains_vendorized_deps?
         @srcs.push(deps_tar_gz)
       end
       if previous_version && !previous_version.broken?
         begin
           puts "Fetching previous version #{previous_version.version} to be able to generate migrations"
-          @srcs.push(*previous_version.original_sources) # archive
+          @srcs.push(*previous_version.dont_fetch_previous.sources) # archive
           @srcs.push(previous_version.deps_tar_gz("deps-prev")) unless previous_version.contains_vendorized_deps?
         rescue UnsupportedVersion
           # ignore this one, just don't build an upgrade
