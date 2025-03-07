@@ -42,20 +42,15 @@ module Pgpm
       end
 
       def license
-        if provides_pgxn_meta_json?
-          lic = pgxn_meta_json["license"]
-          case lic
-          when Hash
-            lic.keys.join(" or ")
-          when Array
-            lic.join(" or ")
-          when String
-            lic
+        path = "#{self.source.to_s}"
+        ["LICENSE", "license", "License"].each do |fn|
+          if File.exist?("#{path}/#{fn}")
+            return File.read("#{path}/#{fn}")
           end
-        else
-          super
         end
+        nil
       end
+
     end
   end
 end

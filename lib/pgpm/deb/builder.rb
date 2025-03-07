@@ -10,6 +10,7 @@ module Pgpm
       end
 
       def build
+binding.break
         prepare
         generate_deb_src_files
         pull_image

@@ -19,10 +19,6 @@ module Timescale
       "An open-source time-series SQL database optimized for fast ingest and complex queries"
     end
 
-    def license
-      "Timescale License"
-    end
-
     def build_steps
       [
         "./bootstrap -DPG_CONFIG=$PG_CONFIG #{bootstrap_flags.map { |f| "-D#{f}" }.join(" ")}",

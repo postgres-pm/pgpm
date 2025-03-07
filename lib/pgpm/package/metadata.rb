@@ -25,6 +25,16 @@ module Pgpm
         requires.any?(&:broken?)
       end
 
+      def license
+        path = "#{self.source.to_s}"
+        ["LICENSE", "license", "License"].each do |fn|
+          if File.exist?("#{path}/#{fn}")
+            return File.read("#{path}/#{fn}")
+          end
+        end
+        nil
+      end
+
       module ClassMethods
         def extension_name
           self[:latest]&.extension_name

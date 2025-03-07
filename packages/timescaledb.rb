@@ -8,10 +8,6 @@ class Timescaledb < Pgpm::Package
     "complex queries"
   end
 
-  def licence
-    "Timescale License"
-  end
-
   def summary
       "TimescaleDB is an open-source database designed to make SQL "        +
       "scalable for time-series data. It is engineered up from PostgreSQL " +
@@ -41,7 +37,6 @@ class Timescaledb < Pgpm::Package
           "DESTDIR=$PGPM_BUILDROOT cmake --build build --target install"
         ]
       }
-    }
     end
   end
 
