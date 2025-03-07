@@ -182,7 +182,7 @@ module Omnigres
         rescue Git::GitExecuteError
           share_fix = "-e PGSHAREDIR=#{pgpath}/build/share"
         end
-        unless Pgpm::Podman.run "run -ti #{share_fix} -v #{source}:#{source} -v #{Pgpm::Cache.directory}:#{Pgpm::Cache.directory} #{PGPM_BUILD_CONTAINER_IMAGE}  cmake -S #{src} -B #{src}/build -DOPENSSL_CONFIGURED=1 -DPGVER=#{Pgpm::Postgres::Distribution.in_scope.version} -DPGDIR=#{pgpath}"
+        unless Pgpm::Podman.run "run -ti #{share_fix} -v #{src}:#{src} -v #{Pgpm::Cache.directory}:#{Pgpm::Cache.directory} #{PGPM_BUILD_CONTAINER_IMAGE}  cmake -S #{src} -B #{src}/build -DOPENSSL_CONFIGURED=1 -DPGVER=#{Pgpm::Postgres::Distribution.in_scope.version} -DPGDIR=#{pgpath}"
           raise "Can't configure the project"
         end
 
