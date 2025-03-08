@@ -10,10 +10,11 @@ module Pgpm
       attr_reader :package, :release, :postgres_version, :postgres_distribution
 
       def initialize(package)
-        @package = package
-        @release = 1
-
         @postgres_distribution = Pgpm::Postgres::Distribution.in_scope
+        @package = package
+        @package.postgres_major_version = @postgres_distribution.version.split(".")[0]
+        @package.os = "debian"
+        @release = 1
       end
 
       def sources
@@ -25,24 +26,6 @@ module Pgpm
         raise "No such template: #{fn}" unless File.exist?(fn)
         erb = ERB.new(File.read(fn))
         erb.result(binding)
-      end
-
-      def deps
-        ["postgresql-#{postgres_major_version}"]
-      end
-
-      def build_deps
-        [
-          "postgresql-#{postgres_major_version}",
-          "build-essential",
-          "postgresql-#{postgres_major_version}",
-          "postgresql-server-dev-#{postgres_major_version}",
-          "postgresql-common"
-        ]
-      end
-
-      def postgres_major_version
-        self.postgres_distribution.version.split(".")[0]
       end
 
       def source_version
@@ -62,11 +45,6 @@ module Pgpm
           when "aarch64", "arm64"
             "arm64"
         end
-      end
-
-      # Whatever is returned from this method gets added to the "rules" file.
-      def rules_amendments
-        "#"
       end
 
     end

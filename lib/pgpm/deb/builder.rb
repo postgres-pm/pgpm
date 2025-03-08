@@ -10,7 +10,6 @@ module Pgpm
       end
 
       def build
-binding.break
         prepare
         generate_deb_src_files
         pull_image
@@ -23,7 +22,7 @@ binding.break
 
       # Depends on postgres version and arch
       def image_name
-        "quay.io/qount25/pgpm-debian-pg#{@spec.postgres_major_version}-#{@spec.arch}"
+        "quay.io/qount25/pgpm-debian-pg#{@spec.package.postgres_major_version}-#{@spec.arch}"
       end
 
       def prepare
