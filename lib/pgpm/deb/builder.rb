@@ -61,7 +61,7 @@ module Pgpm
         # podman run options
         create_opts = " -v #{@pgpm_dir}:/root/pgpm"
         create_opts += ":z" if selinux_enabled?
-        create_opts += " --privileged --annotation run.oci.keep_original_groups=1"
+        create_opts += " --privileged"
         create_opts += " --name #{@container_name} #{image_name}"
 
         dsc_fn = "#{@spec.package.name}-#{@spec.package.version.to_s}_0-1.dsc"
@@ -69,11 +69,12 @@ module Pgpm
 
         # commands to run
         cmds = " /bin/bash -c 'cd /root/pgpm/source"
-        cmds += " && dpkg-buildpackage --build=source"
+        cmds += " && dpkg-buildpackage --build=source -d" # -d flag helps with dependencies error
         cmds += " && fakeroot pbuilder build ../#{dsc_fn}"
         cmds += " && mv /var/cache/pbuilder/result/#{deb_fn} /root/pgpm/out/'"
 
         puts "  Creating and starting container #{@container_name} & running pbuilder"
+        puts "podman run -it #{create_opts} #{cmds}"
         system("podman run -it #{create_opts} #{cmds}")
         exit(1) if $?.to_i > 0
       end

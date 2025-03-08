@@ -31,7 +31,7 @@ module Timescale
     def build_dependencies
       deps = case @os
       when "debian", "ubunut"
-        ["openssl-dev", "cmake"]
+        ["libssl-dev", "cmake"]
       when "rocky", "redhat", "fedora"
         ["openssl-devel", "cmake"]
       end
@@ -43,7 +43,7 @@ module Timescale
       when "debian", "ubuntu"
         {
           rules:  "override_dh_auto_configure:\n" +
-                  "  dh_auto_configure -- -DCMAKE_BUILD_TYPE=\"Release\""
+                  "\tdh_auto_configure -- -DCMAKE_BUILD_TYPE=\"Release\""
         }
       when "rocky", "redhat", "fedora"
         {
