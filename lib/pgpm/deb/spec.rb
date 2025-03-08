@@ -56,7 +56,7 @@ module Pgpm
       def arch
         # https://memgraph.com/blog/ship-it-on-arm64-or-is-it-aarch64
         # Debian suffixes are "amd64" and "arm64". Here we translate:
-        case Pgpm::Arch.host.name
+        case Pgpm::Arch.in_scope.name
           when "amd64", "x86_64"
             "amd64"
           when "aarch64", "arm64"
