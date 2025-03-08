@@ -9,10 +9,15 @@ module Pgpm
       attr_reader :package, :release, :postgres_version, :postgres_distribution
 
       def initialize(package)
+        @postgres_distribution = Pgpm::Postgres::Distribution.in_scope
         @package = package
         @release = 1
 
-        @postgres_distribution = Pgpm::Postgres::Distribution.in_scope
+        # Needed in order to return correct dependencies for the selected
+        # version of postgres and selected OS.
+        @package = package
+        @package.os = "redhat"
+        @package.postgres_major_version = @postgres_distribution.version.split(".")[0]
       end
 
       def versionless
