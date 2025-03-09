@@ -56,6 +56,17 @@ module Pgpm
           super
         end
       end
+
+      def license_text
+        path = "#{self.source.to_s}"
+        ["LICENSE", "license", "License"].each do |fn|
+          if File.exist?("#{path}/#{fn}")
+            return File.read("#{path}/#{fn}")
+          end
+        end
+        nil
+      end
+
     end
   end
 end

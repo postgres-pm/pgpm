@@ -7,12 +7,13 @@ module Pgpm
         []
       end
 
-      def build_steps
-        []
-      end
-
-      def install_steps
-        []
+      def build_info
+        case @os
+        when "debian", "ubuntu"
+          { rules: "" }
+        when "rocky", "redhat", "fedora"
+          { build_steps: [], install_steps: [] }
+        end
       end
 
       def source_url_directory_name
