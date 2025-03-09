@@ -68,7 +68,7 @@ module Pgpm
         def chain(op)
           raise ArgumentError, "can't chain non-rebuild operations" unless op.args.include?("--rebuild") && @args.include?("--rebuild")
 
-          self.args.insert(self.args.index("--localrepo"), *op.args[op.args.index("--recurse") + 1..op.args.index("--localrepo")-1])
+          args.insert(args.index("--localrepo"), *op.args[op.args.index("--recurse") + 1..op.args.index("--localrepo") - 1])
           self
         end
 
