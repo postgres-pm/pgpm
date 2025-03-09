@@ -12,7 +12,7 @@ module Pgpm
       def initialize(package)
         @postgres_distribution = Pgpm::Postgres::Distribution.in_scope
         @package = package
-        @package.postgres_major_version = @postgres_distribution.version.split(".")[0]
+        @package.postgres_major_version = @postgres_distribution.major_version
         @package.os = "debian"
         @release = 1
       end

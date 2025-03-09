@@ -17,7 +17,7 @@ module Pgpm
         # version of postgres and selected OS.
         @package = package
         @package.os = "redhat"
-        @package.postgres_major_version = @postgres_distribution.version.split(".")[0]
+        @package.postgres_major_version = @postgres_distribution.major_version
       end
 
       def versionless
