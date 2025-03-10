@@ -10,7 +10,6 @@ module Pgpm
         case @os
         when "debian", "ubuntu"
           [
-            "postgresql-#{postgres_major_version}",
             "build-essential",
             "postgresql-#{postgres_major_version}",
             "postgresql-server-dev-#{postgres_major_version}",
@@ -18,7 +17,6 @@ module Pgpm
           ]
         when "rocky", "redhat", "fedora"
           [
-            "postgresql-#{postgres_major_version}",
             "build-essential",
             "postgresql-#{postgres_major_version}",
             "postgresql-server-devel-#{postgres_major_version}",

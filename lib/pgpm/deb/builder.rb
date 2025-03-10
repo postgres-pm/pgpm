@@ -61,7 +61,7 @@ module Pgpm
         # podman run options
         create_opts = " -v #{@pgpm_dir}:/root/pgpm"
         create_opts += ":z" if selinux_enabled?
-        create_opts += " --privileged"
+        create_opts += " --privileged --tmpfs /tmp" #--privileged --cap-add=sys_admin --security-opt label:disable -v /proc:/proc
         create_opts += " --name #{@container_name} #{image_name}"
 
         dsc_fn = "#{@spec.package.name}-#{@spec.package.version.to_s}_0-1.dsc"
