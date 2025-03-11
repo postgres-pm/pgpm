@@ -58,25 +58,32 @@ module Pgpm
       end
 
       def run_build
-        # podman run options
+        # podman create options
         create_opts = " -v #{@pgpm_dir}:/root/pgpm"
         create_opts += ":z" if selinux_enabled?
-        create_opts += " --privileged --tmpfs /tmp" #--privileged --cap-add=sys_admin --security-opt label:disable -v /proc:/proc
+        create_opts += " --privileged --tmpfs /tmp"
         create_opts += " --name #{@container_name} #{image_name}"
 
         dsc_fn = "#{@spec.package.name}-#{@spec.package.version.to_s}_0-1.dsc"
         deb_fn = "#{@spec.full_pkg_name}.deb"
 
-        # commands to run
-        cmds = " /bin/bash -c 'cd /root/pgpm/source"
-        cmds += " && dpkg-buildpackage --build=source -d" # -d flag helps with dependencies error
-        cmds += " && fakeroot pbuilder build ../#{dsc_fn}"
-        cmds += " && mv /var/cache/pbuilder/result/#{deb_fn} /root/pgpm/out/'"
-
         puts "  Creating and starting container #{@container_name} & running pbuilder"
-        puts "podman run -it #{create_opts} #{cmds}"
-        system("podman run -it #{create_opts} #{cmds}")
+        system("podman create -it #{create_opts}")
         exit(1) if $?.to_i > 0
+        system("podman start #{@container_name}")
+        exit(1) if $?.to_i > 0
+
+        cmds = []
+        cmds << "dpkg-buildpackage --build=source -d" # -d flag helps with dependencies error
+        cmds << "fakeroot pbuilder build ../#{dsc_fn}"
+        cmds << "mv /var/cache/pbuilder/result/#{deb_fn} /root/pgpm/out/"
+
+        puts "  Building package with pbuilder..."
+        cmds.each do |cmd|
+          system("podman exec -w /root/pgpm/source #{@container_name} /bin/bash -c '#{cmd}'")
+          exit(1) if $?.to_i > 0
+        end
+
       end
 
       def copy_build_from_container
@@ -88,7 +95,8 @@ module Pgpm
       def cleanup
         puts "Cleaning up..."
 
-        puts "  Destroying podman container: #{@container_name}"
+        puts "  Stopping destroying podman container: #{@container_name}"
+        system("podman container stop #{@container_name}")
         system("podman container rm #{@container_name}")
 
         # Remove temporary files
