@@ -8,8 +8,6 @@ require "dry/cli"
 require "parallel"
 require "etc"
 
-require "debug"
-
 module Pgpm
   module CLI
     module Commands
