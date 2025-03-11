@@ -25,7 +25,7 @@ RUN apt install -y build-essential pbuilder fakeroot fakechroot
 RUN echo 'MIRRORSITE=http://deb.debian.org/debian'  > /etc/pbuilderrc
 RUN echo 'AUTO_DEBSIGN=${AUTO_DEBSIGN:-no}'         > /root/.pbuilderrc
 RUN echo 'HOOKDIR=/var/cache/pbuilder/hooks'       >> /root/.pbuilderrc
-RUN --security=insecure pbuilder create  # --components "main contrib-non-free"
+RUN --security=insecure pbuilder create
 
 COPY pbuilder_install_script.sh /root/pbuilder_install_script.sh
 RUN --security=insecure pbuilder execute --save-after-exec /root/pbuilder_install_script.sh

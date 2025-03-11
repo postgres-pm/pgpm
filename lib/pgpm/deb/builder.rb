@@ -74,6 +74,19 @@ module Pgpm
         exit(1) if $?.to_i > 0
 
         cmds = []
+
+        # This line prevents clean-up after pbuilder finishes. There's no option
+        # in pbuilder to do it, so we have to patch it manually. The issue is
+        # with pbuilder not being able to delete some directories (presumably,
+        # due to directory names starting with ".") and returning error.
+        #
+        # This little patch avoids the error by returning from the python cleanup
+        # function early -- because the package itself is built successfully and
+        # we don't actually care that pbuilder is unable to clean something up.
+        # The container is going to be removed anyway, so it's even less work as
+        # a result.
+        cmds << "sed -E -i \"s/(^function clean_subdirectories.*$)/\\1\\n  return/g\" /usr/lib/pbuilder/pbuilder-modules"
+
         cmds << "dpkg-buildpackage --build=source -d" # -d flag helps with dependencies error
         cmds << "fakeroot pbuilder build ../#{dsc_fn}"
         cmds << "mv /var/cache/pbuilder/result/#{deb_fn} /root/pgpm/out/"
