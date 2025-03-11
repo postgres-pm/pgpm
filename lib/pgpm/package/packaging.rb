@@ -4,8 +4,6 @@ module Pgpm
   class Package
     module Packaging
 
-      attr_accessor :os
-
       def to_rpm_spec(**opts)
         Pgpm::RPM::Spec.new(self, **opts)
       end

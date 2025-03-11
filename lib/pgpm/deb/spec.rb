@@ -13,7 +13,6 @@ module Pgpm
         @postgres_distribution = Pgpm::Postgres::Distribution.in_scope
         @package = package
         @package.postgres_major_version = @postgres_distribution.major_version
-        @package.os = "debian"
         @release = 1
       end
 

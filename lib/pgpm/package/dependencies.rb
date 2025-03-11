@@ -7,7 +7,7 @@ module Pgpm
       attr_accessor :postgres_major_version
 
       def build_dependencies
-        case @os
+        case Pgpm::OS.in_scope.class.name
         when "debian", "ubuntu"
           [
             "build-essential",
@@ -15,7 +15,7 @@ module Pgpm
             "postgresql-server-dev-#{postgres_major_version}",
             "postgresql-common"
           ]
-        when "rocky", "redhat", "fedora"
+        when "rocky+epel-9", "redhat", "fedora"
           [
             "build-essential",
             "postgresql-#{postgres_major_version}",
@@ -26,10 +26,10 @@ module Pgpm
       end
 
       def dependencies
-        case @os
+        case Pgpm::OS.in_scope.class.name
         when "debian", "ubuntu"
           [ "postgresql-#{postgres_major_version}" ]
-        when "rocky", "redhat", "fedora"
+        when "rocky+epel-9", "redhat", "fedora"
           [ "postgresql-#{postgres_major_version}" ]
         end
       end

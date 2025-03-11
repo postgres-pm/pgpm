@@ -29,23 +29,23 @@ module Timescale
     end
 
     def build_dependencies
-      deps = case @os
+      deps = case Pgpm::OS.in_scope.class.name
       when "debian", "ubunut"
         ["libssl-dev", "cmake"]
-      when "rocky", "redhat", "fedora"
+      when "rocky+epel-9", "redhat", "fedora"
         ["openssl-devel", "cmake"]
       end
       super + deps
     end
 
     def build_info
-      case @os
+      case Pgpm::OS.in_scope.class.name
       when "debian", "ubuntu"
         {
           rules:  "override_dh_auto_configure:\n" +
                   "\tdh_auto_configure -- -DCMAKE_BUILD_TYPE=\"Release\""
         }
-      when "rocky", "redhat", "fedora"
+      when "rocky+epel-9", "redhat", "fedora"
         {
           build_steps: [
             "./bootstrap -DPG_CONFIG=$PG_CONFIG #{bootstrap_flags.map { |f| "-D#{f}" }.join(" ")}",

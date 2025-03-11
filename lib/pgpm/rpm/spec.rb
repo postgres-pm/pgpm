@@ -15,8 +15,6 @@ module Pgpm
 
         # Needed in order to return correct dependencies for the selected
         # version of postgres and selected OS.
-        @package = package
-        @package.os = "redhat"
         @package.postgres_major_version = @postgres_distribution.major_version
       end
 

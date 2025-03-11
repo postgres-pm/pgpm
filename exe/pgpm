@@ -118,7 +118,7 @@ module Pgpm
                     end
                     p = Pgpm::ScopedObject.new(p, os, arch)
                     spec = p.to_rpm_spec
-                    builder = Pgpm::RedHat::Builder.new(spec)
+                    builder = Pgpm::RPM::Builder.new(spec)
                     src_builder = builder.source_builder
                     p = c.nil? ? src_builder : c.and_then(src_builder)
                     p.and_then(builder.versionless_builder)
