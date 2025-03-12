@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "debug"
+
 module Pgpm
   module Deb
     class Builder
@@ -31,8 +33,32 @@ module Pgpm
         @pgpm_dir  = Dir.mktmpdir
         Dir.mkdir "#{@pgpm_dir}/source"
         Dir.mkdir "#{@pgpm_dir}/out"
-        puts "  Copying #{@spec.package.source.to_s} to #{@pgpm_dir}/source/"
-        FileUtils.copy_entry @spec.package.source.to_s, "#{@pgpm_dir}/source/"
+
+        puts "  Downloading and unpacking sources to #{@pgpm_dir}"
+
+        fn = nil
+        @spec.sources.map do |src|
+          srcfile = File.join("#{@pgpm_dir}", src.name)
+          File.write(srcfile, src.read)
+          fn = src.name
+        end
+
+        system("tar -xf #{@pgpm_dir}/#{fn} -C #{@pgpm_dir}/source/")
+        FileUtils.remove("#{@pgpm_dir}/#{fn}")
+
+        untar_dir_entries = Dir.entries("#{@pgpm_dir}/source/").select do |entry|
+          !([".", ".."].include?(entry))
+        end
+
+        if untar_dir_entries.size == 1
+          entry = untar_dir_entries[0]
+          if File.directory?("#{@pgpm_dir}/source/#{entry}")
+            FileUtils.mv "#{@pgpm_dir}/source/#{entry}", "#{@pgpm_dir}/"
+            FileUtils.remove_dir "#{@pgpm_dir}/source/"
+            FileUtils.mv "#{@pgpm_dir}/#{entry}", "#{@pgpm_dir}/source"
+          end
+        end
+
       end
 
       def pull_image
