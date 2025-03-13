@@ -24,8 +24,8 @@ module Pgpm
           License: #{@package.license}
 
           BuildRequires: #{@postgres_distribution.build_time_requirement_packages.join(" ")}
-          Requires: pgpm-#{@package.name}-#{@postgres_distribution.version}_#{@package.version}
-          BuildRequires: pgpm-#{@package.name}-#{@postgres_distribution.version}_#{@package.version}
+          Requires: pgpm-#{@package.name}+#{@package.version}-#{@postgres_distribution.version}
+          BuildRequires: pgpm-#{@package.name}+#{@package.version}-#{@postgres_distribution.version}
           BuildArch:  noarch
 
           %description
@@ -62,7 +62,7 @@ module Pgpm
         end
 
         <<~EOF
-          Name: pgpm-#{@package.name}-#{@postgres_distribution.version}_#{@package.version}
+          Name: pgpm-#{@package.name}+#{@package.version}-#{@postgres_distribution.version}
           Version: 1
           Release: 1%{?dist}
           Summary: #{@package.summary}
