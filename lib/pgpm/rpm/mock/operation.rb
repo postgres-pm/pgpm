@@ -60,7 +60,7 @@ module Pgpm
           options = @opts.flat_map { |(k, v)| ["--config-opts", "#{k}=#{v}"] }.compact.join(" ")
           command = "mock #{options} #{@args.join(" ")}"
           map_paths = @paths.map { |p| "-v #{p}:#{p}" }.join(" ")
-          raise "Failed to execute `#{command}`" unless Podman.run("run -v #{Dir.pwd}:#{Dir.pwd} #{map_paths} --privileged -ti ghcr.io/postgres-pm/pgpm #{command}")
+          raise "Failed to execute `#{command}`" unless Podman.run("run -v #{Dir.pwd}:#{Dir.pwd} #{map_paths} --privileged -i ghcr.io/postgres-pm/pgpm #{command}")
 
           @cb&.call
         end
