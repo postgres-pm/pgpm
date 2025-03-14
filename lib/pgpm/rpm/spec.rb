@@ -73,7 +73,7 @@ module Pgpm
           #{@package.build_dependencies.uniq.map { |dep| "BuildRequires: #{dep}" }.join("\n")}
           #{@package.dependencies.uniq.map { |dep| "Requires: #{dep}" }.join("\n")}
           #{@package.requires.uniq.map do |dep|
-            req = dep.contrib? ? @postgres_distribution.package_for(dep) : "pgpm-#{dep.name}-#{@postgres_distribution.version}_#{dep.version}"
+            req = dep.contrib? ? @postgres_distribution.package_for(dep) : "pgpm-#{dep.name}+#{dep.version}-#{@postgres_distribution.version}"
             raise "Can't build with a broken dependency #{dep.name}@#{dep.version}" if dep.broken?
 
             "Requires: #{req}#{"\nBuildRequires: #{req}" if dep.contrib?}"
