@@ -228,12 +228,12 @@ module Omnigres
       end
       if previous_version && !previous_version.broken?
         begin
-          puts "Fetching previous version #{previous_version.version} to be able to generate migrations"
+          puts "Fetching previous version of #{name} (#{previous_version.version}) to be able to generate migrations"
           @srcs.push(*previous_version.dont_fetch_previous.sources) # archive
           @srcs.push(previous_version.deps_tar_gz("deps-prev")) unless previous_version.contains_vendorized_deps?
         rescue UnsupportedVersion
           # ignore this one, just don't build an upgrade
-          puts "Ignore #{previous_version.version}, it is unsupported"
+          puts "Ignore #{name} #{previous_version.version}, it is unsupported"
           @srcs.pop # get the version out
           @no_migration = true
         end
