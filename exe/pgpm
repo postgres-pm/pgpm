@@ -113,7 +113,7 @@ module Pgpm
               selected_pgdist.with_scope do
                 pkgs = pkgs.flat_map do |pkg|
                   [pkg, *pkg.requires]
-                end
+                end.reject(&:contrib?)
 
                 b = pkgs.reduce(nil) do |c, p|
                   if p.broken?
