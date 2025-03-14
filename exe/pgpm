@@ -112,7 +112,7 @@ module Pgpm
             arch.with_scope do
               selected_pgdist.with_scope do
                 pkgs = pkgs.flat_map do |pkg|
-                  [pkg, *pkg.requires]
+                  [pkg, *pkg.all_requirements]
                 end.reject(&:contrib?)
 
                 b = pkgs.reduce(nil) do |c, p|
