@@ -31,8 +31,8 @@ module Pgpm
         @package.version.to_s
       end
 
-      def full_pkg_name
-        "#{@package.name}-#{@package.version.to_s}_0-1_#{arch}"
+      def deb_pkg_name
+        "#{@package.name}+#{@package.version.to_s}-pg#{@package.postgres_major_version}"
       end
 
       def arch

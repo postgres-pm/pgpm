@@ -14,8 +14,21 @@
 # Package maintainers to append LDFLAGS.
 #export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 
+DEB_BUILDDIR ?= $(CURDIR)
 
 %:
 	dh $@
+
+override_dh_install:
+	dh_install
+	chmod +x "$(DEB_BUILDDIR)/prepare_artifacts.sh"
+	chmod +x "$(DEB_BUILDDIR)/pg_config.sh"
+	find $(DEB_BUILDDIR) -type f | sort - | sed 's|^$(DEB_BUILDDIR)||' > .pgpm_before | sort
+	export PG_CONFIG="$(DEB_BUILDDIR)/pg_config.sh"; \
+	export PGPM_BUILDROOT="$(DEB_BUILDDIR)"; \
+	export PGPM_EXTENSION_NAME="<%= self.package.extension_name %>"; \
+	export PGPM_EXTENSION_VERSION="<%= self.package.version %>"; \
+	export PGPM_BUILDDEB="$(DEB_BUILDDIR)/debian/<%= deb_pkg_name %>"; \
+	./prepare_artifacts.sh
 
 <%= self.package.build_info[:rules] %>

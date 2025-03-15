@@ -17,7 +17,7 @@ module Pgpm
         pull_image
         run_build
         copy_build_from_container
-        cleanup
+        #cleanup
       end
 
       private
@@ -59,6 +59,11 @@ module Pgpm
           end
         end
 
+        ["prepare_artifacts.sh", "pg_config.sh"].each do |fn|
+          script_fn = File.expand_path("#{__dir__}/scripts/#{fn}")
+          FileUtils.cp script_fn, "#{@pgpm_dir}/source/"
+        end
+
       end
 
       def pull_image
@@ -90,8 +95,8 @@ module Pgpm
         create_opts += " --privileged --tmpfs /tmp"
         create_opts += " --name #{@container_name} #{image_name}"
 
-        dsc_fn = "#{@spec.package.name}-#{@spec.package.version.to_s}_0-1.dsc"
-        deb_fn = "#{@spec.full_pkg_name}.deb"
+        dsc_fn = "#{@spec.deb_pkg_name}_0-1.dsc"
+        deb_fn = "#{@spec.deb_pkg_name}_0-1_#{@spec.arch}.deb"
 
         puts "  Creating and starting container #{@container_name} & running pbuilder"
         system("podman create -it #{create_opts}")
@@ -126,9 +131,10 @@ module Pgpm
       end
 
       def copy_build_from_container
-        puts "Moving .deb file from podman container into current directory..."
-        deb_fn = "#{@spec.full_pkg_name}.deb"
-        FileUtils.mv("#{@pgpm_dir}/out/#{deb_fn}", Dir.pwd)
+        puts "Copying .deb file from podman container into current directory..."
+        deb_fn = "#{@spec.deb_pkg_name}_0-1_#{@spec.arch}.deb"
+        deb_copy_fn = "#{@spec.deb_pkg_name}_#{@spec.arch}.deb"
+        FileUtils.cp("#{@pgpm_dir}/out/#{deb_fn}", "#{Dir.pwd}/#{deb_copy_fn}")
       end
 
       def cleanup
@@ -156,10 +162,6 @@ module Pgpm
       def selinux_enabled?
         # This returns true or false by itself
         system("sestatus | grep 'SELinux status' | grep -o 'enabled'")
-      end
-
-      def safe_package_name
-        @spec.package.name.gsub(%r{/}, "__")
       end
 
     end
