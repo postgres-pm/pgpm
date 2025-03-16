@@ -1,5 +1,5 @@
-<%= deb_pkg_name %> (0-1) UNRELEASED; urgency=medium
+<%= deb_pkg_name(pkg_type) %> (0-1) UNRELEASED; urgency=medium
 
-  * Version <%= source_version %> package release.
+  * Version <%= pkg_type == :versioned ? 1 : source_version %> package release.
 
  -- PGPM Debian maintainer <debian.maintainer@pgpm.org>  <%= Time.now.strftime('%a, %d %b %Y %H:%M:%S %z')%>

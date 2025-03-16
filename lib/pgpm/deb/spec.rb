@@ -20,10 +20,13 @@ module Pgpm
         @package.sources
       end
 
-      def generate(template_name)
+      def generate(template_name, pkg_type=:versioned)
         fn = "#{__dir__}/templates/#{template_name}.erb"
         raise "No such template: #{fn}" unless File.exist?(fn)
         erb = ERB.new(File.read(fn))
+
+        # Uses pkg_type parameter (which is in scope) to generate
+        # debian/* files for versionless and main packages.
         erb.result(binding)
       end
 
@@ -31,8 +34,12 @@ module Pgpm
         @package.version.to_s
       end
 
-      def deb_pkg_name
-        "#{@package.name}+#{@package.version.to_s}-pg#{@package.postgres_major_version}"
+      def deb_pkg_name(type=:versioned)
+        if type == :versioned
+          "#{@package.name}+#{@package.version.to_s}-pg#{@package.postgres_major_version}"
+        else
+          "#{@package.name}-pg#{@package.postgres_major_version}"
+        end
       end
 
       def arch

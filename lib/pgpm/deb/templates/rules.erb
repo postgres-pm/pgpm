@@ -1,34 +1,40 @@
 #!/usr/bin/make -f
 
-# See debhelper(7) (uncomment to enable).
-# Output every command that modifies files on the build system.
-#export DH_VERBOSE = 1
-
-
-# See FEATURE AREAS in dpkg-buildflags(1).
-#export DEB_BUILD_MAINT_OPTIONS = hardening=+all
-
-# See ENVIRONMENT in dpkg-buildflags(1).
-# Package maintainers to append CFLAGS.
-#export DEB_CFLAGS_MAINT_APPEND  = -Wall -pedantic
-# Package maintainers to append LDFLAGS.
-#export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
-
 DEB_BUILDDIR ?= $(CURDIR)
+EXTENSION_NAME ?= "<%= self.package.extension_name %>"
 
+<% if pkg_type == :versioned %>
 %:
 	dh $@
 
 override_dh_install:
 	dh_install
 	chmod +x "$(DEB_BUILDDIR)/prepare_artifacts.sh"
-	chmod +x "$(DEB_BUILDDIR)/pg_config.sh"
 	find $(DEB_BUILDDIR) -type f | sort - | sed 's|^$(DEB_BUILDDIR)||' > .pgpm_before | sort
-	export PG_CONFIG="$(DEB_BUILDDIR)/pg_config.sh"; \
+	export PG_CONFIG="which pg_config"; \
 	export PGPM_BUILDROOT="$(DEB_BUILDDIR)"; \
-	export PGPM_EXTENSION_NAME="<%= self.package.extension_name %>"; \
+	export PGPM_EXTENSION_NAME=$(EXTENSION_NAME); \
 	export PGPM_EXTENSION_VERSION="<%= self.package.version %>"; \
-	export PGPM_BUILDDEB="$(DEB_BUILDDIR)/debian/<%= deb_pkg_name %>"; \
+	export PGPM_BUILDDEB="$(DEB_BUILDDIR)/debian/<%= deb_pkg_name(pkg_type) %>"; \
 	./prepare_artifacts.sh
 
 <%= self.package.build_info[:rules] %>
+
+<% else %>
+%:
+	dh $@
+
+build:
+	# Custom build commands
+	echo " --> BUILD"
+
+install:
+	echo " --> INSTALL"
+	chmod +x "$(DEB_BUILDDIR)/install_default_control.sh"
+	export PG_CONFIG="which pg_config"; \
+	export PGPM_BUILDROOT="$(DEB_BUILDDIR)"; \
+	export PGPM_EXTENSION_NAME=$(EXTENSION_NAME); \
+	export PGPM_EXTENSION_VERSION="<%= self.package.version %>"; \
+	export PGPM_BUILDDEB="$(DEB_BUILDDIR)/debian/<%= deb_pkg_name(pkg_type) %>"; \
+	./install_default_control.sh
+<% end %>
