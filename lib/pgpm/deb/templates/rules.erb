@@ -15,7 +15,7 @@ override_dh_install:
 	export PGPM_BUILDROOT="$(DEB_BUILDDIR)"; \
 	export PGPM_EXTENSION_NAME=$(EXTENSION_NAME); \
 	export PGPM_EXTENSION_VERSION="<%= self.package.version %>"; \
-	export PGPM_BUILDDEB="$(DEB_BUILDDIR)/debian/<%= deb_pkg_name(pkg_type) %>"; \
+	export PGPM_INSTALL_ROOT="$(DEB_BUILDDIR)/debian/<%= deb_pkg_name(pkg_type) %>"; \
 	./prepare_artifacts.sh
 
 <%= self.package.build_info[:rules] %>
@@ -35,6 +35,6 @@ install:
 	export PGPM_BUILDROOT="$(DEB_BUILDDIR)"; \
 	export PGPM_EXTENSION_NAME=$(EXTENSION_NAME); \
 	export PGPM_EXTENSION_VERSION="<%= self.package.version %>"; \
-	export PGPM_BUILDDEB="$(DEB_BUILDDIR)/debian/<%= deb_pkg_name(pkg_type) %>"; \
+	export PGPM_INSTALL_ROOT="$(DEB_BUILDDIR)/debian/<%= deb_pkg_name(pkg_type) %>"; \
 	./install_default_control.sh
 <% end %>

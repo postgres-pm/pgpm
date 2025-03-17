@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ext_dir="$PGPM_BUILDDEB/$(pg_config --sharedir)/extension"
+ext_dir="${PGPM_INSTALL_ROOT:-$PGPM_BUILDROOT}/$(pg_config --sharedir)/extension"
 control_fn="$ext_dir/$PGPM_EXTENSION_NAME.control"
 
 echo "Creating extension dir: $ext_dir"
