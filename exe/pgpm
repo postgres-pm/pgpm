@@ -41,6 +41,22 @@ module Pgpm
         option :path, type: :path, desc: "Override path to the source"
         argument :packages, type: :array, required: true, desc: "Package names"
 
+        module ExtendedProc
+          refine Proc do
+            def and_then(callable)
+              lambda do |*args|
+                res1 = call(*args)
+                res2 = callable.call(*args)
+                return res1 + res2 if res1.is_a?(Array) && res2.is_a?(Array)
+
+                res2
+              end
+            end
+          end
+        end
+
+        using ExtendedProc
+
         # rubocop:disable Metrics/ParameterLists:
         def call(packages:, args: nil, os: nil, arch: nil, pgdist: nil, pgver: nil, pkgdir: nil, path: nil)
           _ = args
@@ -109,6 +125,10 @@ module Pgpm
             os.with_scope do
               arch.with_scope do
                 selected_pgdist.with_scope do
+                  pkgs = pkgs.flat_map do |pkg|
+                    [pkg, *pkg.all_requirements]
+                  end.reject(&:contrib?)
+
                   b = pkgs.reduce(nil) do |c, p|
                     if p.broken?
                       puts "Can't build a broken package #{p.name}@#{p.version}"
@@ -123,7 +143,7 @@ module Pgpm
                   end
 
                   srpms = b.call
-                  Pgpm::RedHat::Builder.builder(srpms).call
+                  Pgpm::RPM::Builder.builder(srpms).call
                 end
               end
             end
@@ -131,7 +151,6 @@ module Pgpm
             puts "#{os.name} is not a supported OS at this moment"
             exit(1)
           end
-
         end
 
         # rubocop:enable Metrics/ParameterLists:

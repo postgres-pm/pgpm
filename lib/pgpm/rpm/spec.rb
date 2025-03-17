@@ -27,8 +27,8 @@ module Pgpm
           License: #{@package.license}
 
           BuildRequires: #{@postgres_distribution.build_time_requirement_packages.join(" ")}
-          Requires: pgpm-#{@package.name}-#{@postgres_distribution.version}_#{@package.version}
-          BuildRequires: pgpm-#{@package.name}-#{@postgres_distribution.version}_#{@package.version}
+          Requires: pgpm-#{@package.name}+#{@package.version}-#{@postgres_distribution.version}
+          BuildRequires: pgpm-#{@package.name}+#{@package.version}-#{@postgres_distribution.version}
           BuildArch:  noarch
 
           %description
@@ -65,7 +65,7 @@ module Pgpm
         end
 
         <<~EOF
-          Name: pgpm-#{@package.name}-#{@postgres_distribution.version}_#{@package.version}
+          Name: pgpm-#{@package.name}+#{@package.version}-#{@postgres_distribution.version}
           Version: 1
           Release: 1%{?dist}
           Summary: #{@package.summary}
@@ -76,7 +76,7 @@ module Pgpm
           #{@package.build_dependencies.uniq.map { |dep| "BuildRequires: #{dep}" }.join("\n")}
           #{@package.dependencies.uniq.map { |dep| "Requires: #{dep}" }.join("\n")}
           #{@package.requires.uniq.map do |dep|
-            req = dep.contrib? ? @postgres_distribution.package_for(dep) : "pgpm-#{dep.name}-#{@postgres_distribution.version}_#{dep.version}"
+            req = dep.contrib? ? @postgres_distribution.package_for(dep) : "pgpm-#{dep.name}+#{dep.version}-#{@postgres_distribution.version}"
             raise "Can't build with a broken dependency #{dep.name}@#{dep.version}" if dep.broken?
 
             "Requires: #{req}#{"\nBuildRequires: #{req}" if dep.contrib?}"

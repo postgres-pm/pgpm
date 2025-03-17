@@ -166,3 +166,15 @@ docker rmi pgpm:local
 docker rmi ghcr.io/postgres-pm/pgpm:latest
 ```
 
+### Troubleshooting
+
+#### Podman invocations terminate with exit code 137
+
+Make sure your machine has enough RAM. For `podman-machine` you might want to adjust it
+with
+
+```shell
+podman machine stop
+podman machine set -m 16384 # for 16GB
+podman machine start
+```

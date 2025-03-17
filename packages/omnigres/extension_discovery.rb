@@ -21,7 +21,9 @@ module Omnigres
       self.class.mutex.synchronize do
         git =
           if File.directory?(path)
-            ::Git.open(path)
+            g = ::Git.open(path)
+            g.pull
+            g
           else
             ::Git.clone("https://github.com/omnigres/omnigres", path)
           end

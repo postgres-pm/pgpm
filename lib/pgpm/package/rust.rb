@@ -22,7 +22,7 @@ module Pgpm
 
           vendor_dir = Dir.mktmpdir("pgpm")
 
-          podman_cmd = "run -v #{Pgpm::Cache.directory}:#{Pgpm::Cache.directory} -v #{vendor_dir}:#{vendor_dir} -ti rust"
+          podman_cmd = "run -v #{Pgpm::Cache.directory}:#{Pgpm::Cache.directory} -v #{vendor_dir}:#{vendor_dir} -i rust"
           Podman.run("#{podman_cmd} cargo add --manifest-path #{source}/Cargo.toml --dev cargo-pgrx@#{pgrx_version}")
           Podman.run("#{podman_cmd} cargo vendor --versioned-dirs --manifest-path #{source}/Cargo.toml #{vendor_dir}/vendor")
           vendored_pgrx_version = Dir.glob("cargo-pgrx-*", base: File.join(vendor_dir, "vendor"))[0].split("-").last

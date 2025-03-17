@@ -67,9 +67,11 @@ module Omnigres
 
     def configure_steps
       extra_config = contains_vendorized_deps? ? "" : "-DCPM_SOURCE_CACHE=$(pwd)/deps/_deps "
-      ["export PIP_CONFIG_FILE=$(pwd)/deps/pip.conf",
-       "cmake -S #{extension_path} -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo " \
-         "-DOPENSSL_CONFIGURED=1 -DPG_CONFIG=$PG_CONFIG #{extra_config} -DCMAKE_POSITION_INDEPENDENT_CODE=ON"]
+      steps = ["export PIP_CONFIG_FILE=$(pwd)/deps/pip.conf",
+               "cmake -S #{extension_path} -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo " \
+                 "-DOPENSSL_CONFIGURED=1 -DPG_CONFIG=$PG_CONFIG #{extra_config} -DCMAKE_POSITION_INDEPENDENT_CODE=ON"]
+      steps.unshift("source /opt/rh/gcc-toolset-14/enable") if Pgpm::OS.in_scope.is_a?(Pgpm::OS::RedHat)
+      steps
     end
 
     def build_steps
@@ -106,7 +108,9 @@ module Omnigres
     end
 
     def build_dependencies
-      %w[cmake openssl-devel python3 python3-devel nc sudo git] + super
+      deps = %w[cmake openssl-devel python3 python3-devel nc sudo git] + super
+      deps.push("gcc-toolset-14") if Pgpm::OS.in_scope.is_a?(Pgpm::OS::RedHat)
+      deps
     end
 
     def dependencies
@@ -182,7 +186,7 @@ module Omnigres
         rescue Git::GitExecuteError
           share_fix = "-e PGSHAREDIR=#{pgpath}/build/share"
         end
-        unless Pgpm::Podman.run "run -ti #{share_fix} -v #{source}:#{source} -v #{Pgpm::Cache.directory}:#{Pgpm::Cache.directory} #{PGPM_BUILD_CONTAINER_IMAGE}  cmake -S #{src} -B #{src}/build -DOPENSSL_CONFIGURED=1 -DPGVER=#{Pgpm::Postgres::Distribution.in_scope.version} -DPGDIR=#{pgpath}"
+        unless Pgpm::Podman.run "run -i #{share_fix} -v #{src}:#{src} -v #{Pgpm::Cache.directory}:#{Pgpm::Cache.directory} #{PGPM_BUILD_CONTAINER_IMAGE}  cmake -S #{src} -B #{src}/build -DOPENSSL_CONFIGURED=1 -DPGVER=#{Pgpm::Postgres::Distribution.in_scope.version} -DPGDIR=#{pgpath}"
           raise "Can't configure the project"
         end
 
@@ -208,25 +212,28 @@ module Omnigres
       end
     end
 
-    def original_sources
-      method(:sources).super_method.call
+    def dont_fetch_previous
+      @dont_fetch_previous = true
+      self
     end
 
     def sources
       return @srcs if @srcs
 
-      @srcs = original_sources
+      @srcs = super
+      return @srcs if @dont_fetch_previous
+
       unless contains_vendorized_deps?
         @srcs.push(deps_tar_gz)
       end
       if previous_version && !previous_version.broken?
         begin
-          puts "Fetching previous version #{previous_version.version} to be able to generate migrations"
-          @srcs.push(*previous_version.original_sources) # archive
+          puts "Fetching previous version of #{name} (#{previous_version.version}) to be able to generate migrations"
+          @srcs.push(*previous_version.dont_fetch_previous.sources) # archive
           @srcs.push(previous_version.deps_tar_gz("deps-prev")) unless previous_version.contains_vendorized_deps?
         rescue UnsupportedVersion
           # ignore this one, just don't build an upgrade
-          puts "Ignore #{previous_version.version}, it is unsupported"
+          puts "Ignore #{name} #{previous_version.version}, it is unsupported"
           @srcs.pop # get the version out
           @no_migration = true
         end
@@ -291,15 +298,13 @@ module Omnigres
       return if @prerequisites_installed
 
       @os = Pgpm::OS.auto_detect
-      if @os.is_a?(Pgpm::OS::RedHat)
-        images = Oj.load(Pgpm::Podman.run("images --format json", print_stdout: false))
-        unless images.flat_map { |i| i["Names"] }.include?("localhost/#{PGPM_BUILD_CONTAINER_IMAGE}:latest")
-          tmpfile = Tempfile.new
-          Pgpm::Podman.run "run -ti --cidfile #{tmpfile.path} #{PGPM_BUILD_CONTAINER}"
-          id = File.read(tmpfile.path)
-          tmpfile.unlink
-          Pgpm::Podman.run "commit #{id} #{PGPM_BUILD_CONTAINER_IMAGE}"
-        end
+      images = Oj.load(Pgpm::Podman.run("images --format json", print_stdout: false))
+      unless images.flat_map { |i| i["Names"] }.include?("localhost/#{PGPM_BUILD_CONTAINER_IMAGE}:latest")
+        tmpfile = Tempfile.new
+        Pgpm::Podman.run "run -i --cidfile #{tmpfile.path} #{PGPM_BUILD_CONTAINER}"
+        id = File.read(tmpfile.path)
+        tmpfile.unlink
+        Pgpm::Podman.run "commit #{id} #{PGPM_BUILD_CONTAINER_IMAGE}"
       end
       @prerequisites_installed = true
     end
@@ -314,7 +319,7 @@ module Omnigres
       return if File.exist?(ready_marker)
       raise UnsupportedVersion unless File.directory?(File.join(src, "cmake", "dependencies"))
 
-      unless Pgpm::Podman.run "run -ti -v #{Pgpm::Cache.directory}:#{Pgpm::Cache.directory} #{PGPM_BUILD_CONTAINER_IMAGE} cmake -S #{src}/cmake/dependencies -B #{deps} -DCPM_SOURCE_CACHE=#{deps}/_deps"
+      unless Pgpm::Podman.run "run -i -v #{Pgpm::Cache.directory}:#{Pgpm::Cache.directory} #{PGPM_BUILD_CONTAINER_IMAGE} cmake -S #{src}/cmake/dependencies -B #{deps} -DCPM_SOURCE_CACHE=#{deps}/_deps"
         raise "Can't fetch dependencies"
       end
 

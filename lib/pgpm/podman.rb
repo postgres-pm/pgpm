@@ -8,8 +8,8 @@ module Pgpm
   module Podman
     def self.run(command, unhandled_reboot_mitigation: true, print_stdout: true)
       result = TTY::Command.new(printer: :null).run("podman #{command}", pty: true) do |out, err|
-        $stderr.print(out.strip) if print_stdout
-        warn err
+        $stderr.print(out) if print_stdout
+        warn err if err
       end
 
       result.out

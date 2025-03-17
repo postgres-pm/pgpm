@@ -60,7 +60,7 @@ module Pgpm
           options = @opts.flat_map { |(k, v)| ["--config-opts", "#{k}=#{v}"] }.compact.join(" ")
           command = "mock #{options} #{@args.join(" ")}"
           map_paths = @paths.map { |p| "-v #{p}:#{p}" }.join(" ")
-          raise "Failed to execute `#{command}`" unless Podman.run("run -v #{Dir.pwd}:#{Dir.pwd} #{map_paths} --privileged -ti ghcr.io/postgres-pm/pgpm #{command}")
+          raise "Failed to execute `#{command}`" unless Podman.run("run -v #{Dir.pwd}:#{Dir.pwd} #{map_paths} --privileged -i ghcr.io/postgres-pm/pgpm #{command}")
 
           @cb&.call
         end
@@ -68,24 +68,19 @@ module Pgpm
         def chain(op)
           raise ArgumentError, "can't chain non-rebuild operations" unless op.args.include?("--rebuild") && @args.include?("--rebuild")
 
-          args = @args.clone
-          args.insert(@args.index("--localrepo") - 1, op.args[op.args.index("--localrepo") - 1])
-          self.class.new(*args, cb: lambda {
-            res1 = @cb&.call
-            res2 = op.cb&.call
-            return res1 + res2 if res1.is_a?(Array) && res2.is_a?(Array)
-
-            res2
-          })
+          args.insert(args.index("--localrepo"), *op.args[op.args.index("--recurse") + 1..op.args.index("--localrepo") - 1])
+          self
         end
 
         def and_then(op)
           lambda do
             res1 = call
             res2 = op.call
-            return res1 + res2 if res1.is_a?(Array) && res2.is_a?(Array)
-
-            [res1, res2]
+            if res1.is_a?(Array) && res2.is_a?(Array)
+              res1 + res2
+            else
+              [res1, res2]
+            end
           end
         end
       end

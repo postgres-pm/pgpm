@@ -38,6 +38,10 @@ module Pgpm
         []
       end
 
+      def all_requirements
+        requires.flat_map { |r| [r, *r.all_requirements] }.uniq
+      end
+
       def c_files_present?
         Dir.glob("*.c", base: source).any?
       end
