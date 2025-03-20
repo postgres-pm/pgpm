@@ -59,9 +59,13 @@ module Pgpm
 
       def license_text
         path = "#{self.source.to_s}"
-        ["LICENSE", "license", "License"].each do |fn|
-          if File.exist?("#{path}/#{fn}")
-            return File.read("#{path}/#{fn}")
+        ["license", "lisence", "unlicense", "unlisence", "copying"].each do |fn|
+          [fn, fn.capitalize, fn.upcase].each do |fn2|
+            ["", ".txt", ".md"].each do |fn3|
+              if File.exist?("#{path}/#{fn2}#{fn3}")
+                return File.read("#{path}/#{fn2}#{fn3}")
+              end
+            end
           end
         end
         nil
