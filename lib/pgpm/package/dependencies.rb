@@ -10,14 +10,12 @@ module Pgpm
         case Pgpm::OS.in_scope.class.name
         when "debian", "ubuntu"
           [
-            "build-essential",
             "postgresql-#{postgres_major_version}",
             "postgresql-server-dev-#{postgres_major_version}",
             "postgresql-common"
           ]
         when "rocky+epel-9", "redhat", "fedora"
           [
-            "build-essential",
             "postgresql-#{postgres_major_version}",
             "postgresql-server-devel-#{postgres_major_version}",
             "postgresql-common"
