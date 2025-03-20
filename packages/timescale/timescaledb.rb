@@ -38,23 +38,21 @@ module Timescale
       super + deps
     end
 
-    def build_info
+    def configure_steps
       case Pgpm::OS.in_scope.class.name
       when "debian", "ubuntu"
-        {
-          rules:  "override_dh_auto_configure:\n" +
-                  "\tdh_auto_configure -- -DCMAKE_BUILD_TYPE=\"Release\""
-        }
+        ["dh_auto_configure -- -DCMAKE_BUILD_TYPE=\"Release\""]
       when "rocky+epel-9", "redhat", "fedora"
-        {
-          build_steps: [
-            "./bootstrap -DPG_CONFIG=$PG_CONFIG #{bootstrap_flags.map { |f| "-D#{f}" }.join(" ")}",
-            "cmake --build build --parallel"
-          ],
-          install_steps: [
-            "DESTDIR=$PGPM_BUILDROOT cmake --build build --target install"
-          ]
-        }
+        []
+      end
+    end
+
+    def install_steps
+      case Pgpm::OS.in_scope.class.name
+      when "debian", "ubuntu"
+        []
+      when "rocky+epel-9", "redhat", "fedora"
+        ["DESTDIR=$PGPM_BUILDROOT cmake --build build --target install"]
       end
     end
 

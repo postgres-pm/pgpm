@@ -18,15 +18,24 @@ override_dh_install:
 	export PGPM_INSTALL_ROOT="$(DEB_BUILDDIR)/debian/<%= deb_pkg_name(pkg_type) %>"; \
 	./prepare_artifacts.sh
 
-<%= self.package.build_info[:rules] %>
+<% if self.package.configure_steps.size > 0 %>
+override_dh_auto_configure:
+	<%= self.package.configure_steps.join("\n\t") %>
+<% end %>
+
+<% if self.package.build_steps.size > 0 %>
+override_dh_build:
+	<%= self.package.build_steps.join("\n\t") %>
+<% end %>
+
+<% if self.package.install_steps.size > 0 %>
+override_dh_install:
+	<%= self.package.install_steps.join("\n\t") %>
+<% end %>
 
 <% else %>
 %:
 	dh $@
-
-build:
-	# Custom build commands
-	echo " --> BUILD"
 
 install:
 	echo " --> INSTALL"
