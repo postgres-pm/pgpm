@@ -30,7 +30,7 @@ module Timescale
 
     def build_dependencies
       deps = case Pgpm::OS.in_scope.class.name
-      when "debian", "ubunut"
+      when "debian", "ubuntu"
         ["libssl-dev", "cmake"]
       when "rocky+epel-9", "redhat", "fedora"
         ["openssl-devel", "cmake"]
