@@ -7,14 +7,6 @@ module Pgpm
         []
       end
 
-      def build_steps
-        []
-      end
-
-      def install_steps
-        []
-      end
-
       def source_url_directory_name
         nil
       end

@@ -1,0 +1,49 @@
+#!/usr/bin/make -f
+
+DEB_BUILDDIR ?= $(CURDIR)
+EXTENSION_NAME ?= "<%= self.package.extension_name %>"
+
+<% if pkg_type == :versioned %>
+%:
+	dh $@
+
+override_dh_install:
+	dh_install
+	chmod +x "$(DEB_BUILDDIR)/prepare_artifacts.sh"
+	find $(DEB_BUILDDIR) -type f | sort - | sed 's|^$(DEB_BUILDDIR)||' > .pgpm_before | sort
+	export PG_CONFIG="which pg_config"; \
+	export PGPM_BUILDROOT="$(DEB_BUILDDIR)"; \
+	export PGPM_EXTENSION_NAME=$(EXTENSION_NAME); \
+	export PGPM_EXTENSION_VERSION="<%= self.package.version %>"; \
+	export PGPM_INSTALL_ROOT="$(DEB_BUILDDIR)/debian/<%= deb_pkg_name(pkg_type) %>"; \
+	./prepare_artifacts.sh
+
+<% if self.package.configure_steps.size > 0 %>
+override_dh_auto_configure:
+	<%= self.package.configure_steps.join("\n\t") %>
+<% end %>
+
+<% if self.package.build_steps.size > 0 %>
+override_dh_build:
+	<%= self.package.build_steps.join("\n\t") %>
+<% end %>
+
+<% if self.package.install_steps.size > 0 %>
+override_dh_install:
+	<%= self.package.install_steps.join("\n\t") %>
+<% end %>
+
+<% else %>
+%:
+	dh $@
+
+install:
+	echo " --> INSTALL"
+	chmod +x "$(DEB_BUILDDIR)/install_default_control.sh"
+	export PG_CONFIG="which pg_config"; \
+	export PGPM_BUILDROOT="$(DEB_BUILDDIR)"; \
+	export PGPM_EXTENSION_NAME=$(EXTENSION_NAME); \
+	export PGPM_EXTENSION_VERSION="<%= self.package.version %>"; \
+	export PGPM_INSTALL_ROOT="$(DEB_BUILDDIR)/debian/<%= deb_pkg_name(pkg_type) %>"; \
+	./install_default_control.sh
+<% end %>

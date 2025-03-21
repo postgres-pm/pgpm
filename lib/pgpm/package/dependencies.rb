@@ -1,18 +1,42 @@
 # frozen_string_literal: true
 
 require "tsort"
+require "debug"
 
 module Pgpm
   class Package
     module Dependencies
-      def build_dependencies
-        return ["gcc"] if c_files_present?
 
-        []
+      attr_accessor :postgres_major_version
+
+      def build_dependencies
+        case Pgpm::OS.in_scope.class.name
+        when "debian", "ubuntu"
+          deps = [
+            "postgresql-#{postgres_major_version}",
+            "postgresql-server-dev-#{postgres_major_version}",
+            "postgresql-common"
+          ]
+          if self.native?
+            binding.break
+            deps << "build-essential"
+          end
+        when "rocky+epel-9", "redhat", "fedora"
+          [
+            "postgresql-#{postgres_major_version}",
+            "postgresql-server-devel-#{postgres_major_version}",
+            "postgresql-common"
+          ]
+        end
       end
 
       def dependencies
-        []
+        case Pgpm::OS.in_scope.class.name
+        when "debian", "ubuntu"
+          [ "postgresql-#{postgres_major_version}" ]
+        when "rocky+epel-9", "redhat", "fedora"
+          [ "postgresql-#{postgres_major_version}" ]
+        end
       end
 
       def requires
@@ -53,6 +77,7 @@ module Pgpm
       def c_files_present?
         Dir.glob("*.c", base: source).any?
       end
+
     end
   end
 end
