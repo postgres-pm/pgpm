@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "tsort"
+require "debug"
 
 module Pgpm
   class Package
@@ -11,11 +12,15 @@ module Pgpm
       def build_dependencies
         case Pgpm::OS.in_scope.class.name
         when "debian", "ubuntu"
-          [
+          deps = [
             "postgresql-#{postgres_major_version}",
             "postgresql-server-dev-#{postgres_major_version}",
             "postgresql-common"
           ]
+          if self.native?
+            binding.break
+            deps << "build-essential"
+          end
         when "rocky+epel-9", "redhat", "fedora"
           [
             "postgresql-#{postgres_major_version}",
