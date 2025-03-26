@@ -6,12 +6,7 @@ new_extension_so=
 
 PG_CONFIG="${PG_CONFIG:-"pg_config"}"
 
-# When building with pbuilder on Debian, files are installed under
-# `$PGPM_BUILDROOT/debian/ext-name-0.0.0/`  -- this path should then be
-# assigned to the PGPM_INSTALL_ROOT env variable. However it isn't assigned
-# to it (as is the case with rpm and mock), then we use PGPM_BUILDROOT instead.
-# In this script we're 
-install_root="${PGPM_INSTALL_ROOT:-$PGPM_BUILDROOT}"
+install_root=$PGPM_INSTALL_ROOT
 
 for file in $(find $PGPM_BUILDROOT -name '*.so'); do
   filename=$(basename "$file")

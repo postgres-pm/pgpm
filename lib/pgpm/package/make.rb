@@ -5,23 +5,13 @@ module Pgpm
     module Make
 
       def build_steps
-        case Pgpm::OS.in_scope.class.name
-        when "debian", "ubuntu"
-          return []
-        when "rocky+epel-9", "redhat", "fedora"
-          return [Pgpm::Commands::Make.new("PG_CONFIG=$PG_CONFIG")] if makefile_present?
-        end
-        super
+        [Pgpm::Commands::Make.new("PG_CONFIG=$PG_CONFIG")] if makefile_present?
       end
 
       def install_steps
-        case Pgpm::OS.in_scope.class.name
-        when "debian", "ubuntu"
-          return []
-        when "rocky+epel-9", "redhat", "fedora"
-          return [Pgpm::Commands::Make.new("install", "DESTDIR=$PGPM_BUILDROOT", "PG_CONFIG=$PG_CONFIG")] if makefile_present?
+        if makefile_present?
+          [Pgpm::Commands::Make.new("install", "DESTDIR=$PGPM_INSTALL_ROOT", "PG_CONFIG=$PG_CONFIG")]
         end
-        super
       end
 
       def makefile_present?

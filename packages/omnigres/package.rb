@@ -88,17 +88,17 @@ module Omnigres
 
     def install_steps
       steps = [
-        "mkdir -p $PGPM_BUILDROOT/$($PG_CONFIG --sharedir)/extension",
-        "mkdir -p $PGPM_BUILDROOT/$($PG_CONFIG --pkglibdir)",
+        "mkdir -p $PGPM_INSTALL_ROOT/$($PG_CONFIG --sharedir)/extension",
+        "mkdir -p $PGPM_INSTALL_ROOT/$($PG_CONFIG --pkglibdir)",
         # Package .so artifacts
-        "find build/packaged -name '#{name}*.so' -type f -exec cp {} $PGPM_BUILDROOT/$($PG_CONFIG --pkglibdir) \\;",
+        "find build/packaged -name '#{name}*.so' -type f -exec cp {} $PGPM_INSTALL_ROOT/$($PG_CONFIG --pkglibdir) \\;",
         # Package version-specific control file
-        "cp build/packaged/extension/#{name}--#{version}.control $PGPM_BUILDROOT/$($PG_CONFIG --sharedir)/extension",
+        "cp build/packaged/extension/#{name}--#{version}.control $PGPM_INSTALL_ROOT/$($PG_CONFIG --sharedir)/extension",
         # Package version-specific init file
-        "cp build/packaged/extension/#{name}--#{version}.sql $PGPM_BUILDROOT/$($PG_CONFIG --sharedir)/extension"
+        "cp build/packaged/extension/#{name}--#{version}.sql $PGPM_INSTALL_ROOT/$($PG_CONFIG --sharedir)/extension"
       ]
       if previous_version && !previous_version.broken? && !@no_migration
-        steps.push("cp build/packaged/extension/#{name}--#{previous_version.version}--#{version}.sql $PGPM_BUILDROOT/$($PG_CONFIG --sharedir)/extension")
+        steps.push("cp build/packaged/extension/#{name}--#{previous_version.version}--#{version}.sql $PGPM_INSTALL_ROOT/$($PG_CONFIG --sharedir)/extension")
       end
       steps
     end

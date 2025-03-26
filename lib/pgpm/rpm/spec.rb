@@ -97,12 +97,12 @@ module Pgpm
 
           %build
           export PG_CONFIG=$(rpm -ql #{@postgres_distribution.pg_config_package} | grep 'pg_config$')
-          export PGPM_BUILDROOT=%{buildroot}
+          export PGPM_INSTALL_ROOT=%{buildroot}
           #{@package.build_steps.map(&:to_s).join("\n")}
 
           %install
           export PG_CONFIG=$(rpm -ql #{@postgres_distribution.pg_config_package} | grep 'pg_config$')
-          export PGPM_BUILDROOT=%{buildroot}
+          export PGPM_INSTALL_ROOT=%{buildroot}
           cp %{SOURCE#{sources.find_index { |src| src.name == "pg_config.sh" }}} ./pg_config.sh
           chmod +x ./pg_config.sh
           find %{buildroot} -type f | sort - | sed 's|^%{buildroot}||' > .pgpm_before | sort

@@ -1,37 +1,45 @@
 #!/usr/bin/make -f
 
-DEB_BUILDDIR ?= $(CURDIR)
-EXTENSION_NAME ?= "<%= self.package.extension_name %>"
+export DEB_BUILDDIR = $(CURDIR)
+export PGPM_BUILDROOT = $(CURDIR)
+export PG_CONFIG = $(shell /usr/bin/which pg_config)
+export PGPM_EXTENSION_NAME = "<%= self.package.extension_name %>"
+export PGPM_EXTENSION_VERSION = "<%= self.package.version %>"
+export PGPM_INSTALL_ROOT = "$(CURDIR)/debian/<%= deb_pkg_name(pkg_type) %>"
 
 <% if pkg_type == :versioned %>
 %:
-	dh $@
+	echo " --> % rules target"
 
-override_dh_install:
-	dh_install
-	chmod +x "$(DEB_BUILDDIR)/prepare_artifacts.sh"
-	find $(DEB_BUILDDIR) -type f | sort - | sed 's|^$(DEB_BUILDDIR)||' > .pgpm_before | sort
-	export PG_CONFIG="which pg_config"; \
-	export PGPM_BUILDROOT="$(DEB_BUILDDIR)"; \
-	export PGPM_EXTENSION_NAME=$(EXTENSION_NAME); \
-	export PGPM_EXTENSION_VERSION="<%= self.package.version %>"; \
-	export PGPM_INSTALL_ROOT="$(DEB_BUILDDIR)/debian/<%= deb_pkg_name(pkg_type) %>"; \
+build:
+	echo " --> build target"
+	<%= self.package.build_steps.join("\n\t").gsub('$', '$$') %>
+
+install: build
+	mkdir -p $$PGPM_INSTALL_ROOT
+	echo " --> install target"
+	<%= self.package.install_steps.join("\n\t").gsub('$', '$$') %>
+	chmod +x "$$DEB_BUILDDIR/prepare_artifacts.sh"
+	find $$PGPM_INSTALL_ROOT -type f | sort - | sed 's|^$$PGPM_INSTALL_ROOT||' > .pgpm_before | sort
 	./prepare_artifacts.sh
 
-<% if self.package.configure_steps.size > 0 %>
-override_dh_auto_configure:
-	<%= self.package.configure_steps.join("\n\t") %>
-<% end %>
+build-arch:
+	echo " --> build-arch"
 
-<% if self.package.build_steps.size > 0 %>
-override_dh_build:
-	<%= self.package.build_steps.join("\n\t") %>
-<% end %>
+build-indep:
+	echo " --> build-indep"
 
-<% if self.package.install_steps.size > 0 %>
-override_dh_install:
-	<%= self.package.install_steps.join("\n\t") %>
-<% end %>
+binary: install
+	echo " --> binary"
+
+binary-arch:
+	echo " --> binary-arch"
+
+binary-indep:
+	echo " --> binary-indep"
+
+clean:
+	echo " --> clean"
 
 <% else %>
 %:
@@ -39,11 +47,6 @@ override_dh_install:
 
 install:
 	echo " --> INSTALL"
-	chmod +x "$(DEB_BUILDDIR)/install_default_control.sh"
-	export PG_CONFIG="which pg_config"; \
-	export PGPM_BUILDROOT="$(DEB_BUILDDIR)"; \
-	export PGPM_EXTENSION_NAME=$(EXTENSION_NAME); \
-	export PGPM_EXTENSION_VERSION="<%= self.package.version %>"; \
-	export PGPM_INSTALL_ROOT="$(DEB_BUILDDIR)/debian/<%= deb_pkg_name(pkg_type) %>"; \
+	chmod +x "$$DEB_BUILDDIR/install_default_control.sh"
 	./install_default_control.sh
 <% end %>

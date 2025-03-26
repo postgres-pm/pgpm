@@ -18,7 +18,6 @@ module Pgpm
             "postgresql-common"
           ]
           if self.native?
-            binding.break
             deps << "build-essential"
           end
         when "rocky+epel-9", "redhat", "fedora"

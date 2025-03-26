@@ -52,7 +52,7 @@ module Timescale
       when "debian", "ubuntu"
         []
       when "rocky+epel-9", "redhat", "fedora"
-        ["DESTDIR=$PGPM_BUILDROOT cmake --build build --target install"]
+        ["DESTDIR=$PGPM_INSTALL_ROOT cmake --build build --target install"]
       end
     end
 
