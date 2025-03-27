@@ -47,6 +47,15 @@ module Timescale
       end
     end
 
+    def build_steps
+      case Pgpm::OS.in_scope.class.name
+      when "debian", "ubuntu"
+        ["dh_auto_build"]
+      else
+        super
+      end
+    end
+
     def install_steps
       case Pgpm::OS.in_scope.class.name
       when "rocky+epel-9", "redhat", "fedora"
