@@ -53,6 +53,16 @@ module Pgpm
         end
       end
 
+      def cmds_if_not_empty(cmds, else_echo)
+        if cmds.nil? || cmds.empty?
+          return "\techo \"#{else_echo}\""
+        else
+          cmds.map! { |c| c.to_s }
+          cmds.map! { |c| c.gsub("$", "$$") }
+          return cmds.join("\t")
+        end
+      end
+
     end
   end
 end

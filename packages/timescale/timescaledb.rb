@@ -42,17 +42,17 @@ module Timescale
       case Pgpm::OS.in_scope.class.name
       when "debian", "ubuntu"
         ["dh_auto_configure -- -DCMAKE_BUILD_TYPE=\"Release\""]
-      when "rocky+epel-9", "redhat", "fedora"
-        []
+      else
+        super
       end
     end
 
     def install_steps
       case Pgpm::OS.in_scope.class.name
-      when "debian", "ubuntu"
-        []
       when "rocky+epel-9", "redhat", "fedora"
         ["DESTDIR=$PGPM_INSTALL_ROOT cmake --build build --target install"]
+      else
+        super
       end
     end
 

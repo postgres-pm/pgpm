@@ -9,44 +9,32 @@ export PGPM_INSTALL_ROOT = "$(CURDIR)/debian/<%= deb_pkg_name(pkg_type) %>"
 
 <% if pkg_type == :versioned %>
 %:
-	echo " --> % rules target"
+	dh $@
 
-build:
-	echo " --> build target"
-	<%= self.package.build_steps.join("\n\t").gsub('$', '$$') %>
+override_dh_auto_configure:
+	echo " --> configuring"
+	<%= cmds_if_not_empty self.package.configure_steps, '...nothing to configure'  %>
 
-install: build
-	mkdir -p $$PGPM_INSTALL_ROOT
-	echo " --> install target"
-	<%= self.package.install_steps.join("\n\t").gsub('$', '$$') %>
+override_dh_auto_build:
+	echo " --> building"
+	<%= cmds_if_not_empty self.package.build_steps, '...nothing to build'  %>
+
+override_dh_auto_install:
+	echo " --> installing"
+	dh_auto_install
+	<%= cmds_if_not_empty self.package.install_steps, '...no custom install steps'  %>
 	chmod +x "$$DEB_BUILDDIR/prepare_artifacts.sh"
 	find $$PGPM_INSTALL_ROOT -type f | sort - | sed 's|^$$PGPM_INSTALL_ROOT||' > .pgpm_before | sort
 	./prepare_artifacts.sh
-
-build-arch:
-	echo " --> build-arch"
-
-build-indep:
-	echo " --> build-indep"
-
-binary: install
-	echo " --> binary"
-
-binary-arch:
-	echo " --> binary-arch"
-
-binary-indep:
-	echo " --> binary-indep"
-
-clean:
-	echo " --> clean"
 
 <% else %>
 %:
 	dh $@
 
-install:
+override_dh_auto_install:
+	dh_auto_install
 	echo " --> INSTALL"
 	chmod +x "$$DEB_BUILDDIR/install_default_control.sh"
 	./install_default_control.sh
+
 <% end %>
