@@ -20,11 +20,7 @@ module Pgpm
             deps << "build-essential"
           end
         when "rocky+epel-9", "redhat", "fedora"
-          [
-            "postgresql-#{postgres_major_version}",
-            "postgresql-server-devel-#{postgres_major_version}",
-            "postgresql-common"
-          ]
+          []
         end
       end
 
@@ -33,7 +29,7 @@ module Pgpm
         when "debian", "ubuntu"
           [ "postgresql-#{postgres_major_version}" ]
         when "rocky+epel-9", "redhat", "fedora"
-          [ "postgresql-#{postgres_major_version}" ]
+          []
         end
       end
 

@@ -25,7 +25,11 @@ module Timescale
     end
 
     def dependencies
-      super
+      deps = case Pgpm::OS.in_scope.class.name
+      when "rocky+epel-9", "redhat", "fedora"
+        ["openssl"]
+      end
+      super + deps
     end
 
     def build_dependencies
@@ -51,8 +55,11 @@ module Timescale
       case Pgpm::OS.in_scope.class.name
       when "debian", "ubuntu"
         ["dh_auto_build"]
-      else
-        super
+      when "rocky+epel-9", "redhat", "fedora"
+        [
+          "./bootstrap -DPG_CONFIG=$PG_CONFIG #{bootstrap_flags.map { |f| "-D#{f}" }.join(" ")}",
+          "cmake --build build --parallel"
+        ]
       end
     end
 
