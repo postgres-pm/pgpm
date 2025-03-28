@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "tsort"
-require "debug"
 
 module Pgpm
   class Package
