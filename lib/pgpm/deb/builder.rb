@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
+require "English"
 require "debug"
 
 module Pgpm
   module Deb
     class Builder
-
       def initialize(spec)
         @spec = spec
-        @container_name = "pgpm-debian_build-#{Time.now.to_i}_#{rand(10000)}"
-        @pgpm_dir  = Dir.mktmpdir
+        @container_name = "pgpm-debian_build-#{Time.now.to_i}_#{rand(10_000)}"
+        @pgpm_dir = Dir.mktmpdir
       end
 
       def build
@@ -47,7 +47,7 @@ module Pgpm
 
         fn = nil
         @spec.sources.map do |src|
-          srcfile = File.join("#{@pgpm_dir}", src.name)
+          srcfile = File.join(@pgpm_dir.to_s, src.name)
           File.write(srcfile, src.read)
           fn = src.name
         end
@@ -55,8 +55,8 @@ module Pgpm
         system("tar -xf #{@pgpm_dir}/#{fn} -C #{@pgpm_dir}/source-versioned/")
         FileUtils.remove("#{@pgpm_dir}/#{fn}")
 
-        untar_dir_entries = Dir.entries("#{@pgpm_dir}/source-versioned/").select do |entry|
-          !([".", ".."].include?(entry))
+        untar_dir_entries = Dir.entries("#{@pgpm_dir}/source-versioned/").reject do |entry|
+          [".", ".."].include?(entry)
         end
 
         if untar_dir_entries.size == 1
@@ -68,11 +68,10 @@ module Pgpm
           end
         end
 
-        ["prepare_artifacts.sh"].each do |fn|
-          script_fn = File.expand_path("#{__dir__}/scripts/#{fn}")
+        ["prepare_artifacts.sh"].each do |f|
+          script_fn = File.expand_path("#{__dir__}/scripts/#{f}")
           FileUtils.cp script_fn, "#{@pgpm_dir}/source-versioned/"
         end
-
       end
 
       def prepare_default_source
@@ -107,7 +106,7 @@ module Pgpm
         puts "Checking if podman image exists..."
         # Check if image exists
         system("podman image exists #{image_name}")
-        if $?.to_i > 0 # image doesn't exist -- pull image from a remote repository
+        if $CHILD_STATUS.to_i.positive? # image doesn't exist -- pull image from a remote repository
           puts "  No. Pulling image #{image_name}..."
           system("podman pull #{image_name}")
         else
@@ -115,14 +114,14 @@ module Pgpm
         end
       end
 
-      def generate_deb_src_files(pkg_type=:versioned)
+      def generate_deb_src_files(pkg_type = :versioned)
         puts "Generating debian files..."
         Dir.mkdir "#{@pgpm_dir}/source-#{pkg_type}/debian"
-        [:changelog, :control, :copyright, :files, :rules].each do |f|
+        %i[changelog control copyright files rules].each do |f|
           puts "  -> #{@pgpm_dir}/source-#{pkg_type}/debian/#{f}"
           File.write "#{@pgpm_dir}/source-#{pkg_type}/debian/#{f}", @spec.generate(f, pkg_type)
         end
-        File.chmod 0740, "#{@pgpm_dir}/source-#{pkg_type}/debian/rules" # rules file must be executable
+        File.chmod 0o740, "#{@pgpm_dir}/source-#{pkg_type}/debian/rules" # rules file must be executable
       end
 
       def start_container
@@ -134,9 +133,9 @@ module Pgpm
 
         puts "  Creating and starting container #{@container_name} & running pbuilder"
         system("podman create -it #{create_opts}")
-        exit(1) if $?.to_i > 0
+        exit(1) if $CHILD_STATUS.to_i.positive?
         system("podman start #{@container_name}")
-        exit(1) if $?.to_i > 0
+        exit(1) if $CHILD_STATUS.to_i.positive?
       end
 
       # Prevents clean-up after pbuilder finishes. There's no option
@@ -154,7 +153,7 @@ module Pgpm
         system("podman exec #{@container_name} /bin/bash -c '#{cmd}'")
       end
 
-      def run_build(pkg_type=:versioned)
+      def run_build(pkg_type = :versioned)
         dsc_fn = "#{@spec.deb_pkg_name(pkg_type)}_0-1.dsc"
         deb_fn = "#{@spec.deb_pkg_name(pkg_type)}_0-1_#{@spec.arch}.deb"
 
@@ -166,11 +165,11 @@ module Pgpm
         puts "  Building package with pbuilder..."
         cmds.each do |cmd|
           system("podman exec -w /root/pgpm/source-#{pkg_type} #{@container_name} /bin/bash -c '#{cmd}'")
-          exit(1) if $?.to_i > 0
+          exit(1) if $CHILD_STATUS.to_i.positive?
         end
       end
 
-      def copy_build_from_container(pkg_type=:versioned)
+      def copy_build_from_container(pkg_type = :versioned)
         puts "Copying .deb file from podman container into current directory..."
         deb_fn = "#{@spec.deb_pkg_name(pkg_type)}_0-1_#{@spec.arch}.deb"
         deb_copy_fn = "#{@spec.deb_pkg_name(pkg_type)}_#{@spec.arch}.deb"
@@ -203,7 +202,6 @@ module Pgpm
         # This returns true or false by itself
         system("sestatus | grep 'SELinux status' | grep -o 'enabled'")
       end
-
     end
   end
 end

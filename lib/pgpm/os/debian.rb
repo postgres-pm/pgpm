@@ -29,7 +29,6 @@ module Pgpm
       def mock_config
         "debian-12-#{Pgpm::Arch.in_scope.name}+pgdg"
       end
-
     end
   end
 end

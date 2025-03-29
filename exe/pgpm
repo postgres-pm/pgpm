@@ -109,7 +109,7 @@ module Pgpm
               arch.with_scope do
                 selected_pgdist.with_scope do
                   spec = nil
-                  b = pkgs.reduce(nil) do |c, p|
+                  pkgs.reduce(nil) do |_c, p|
                     p = Pgpm::ScopedObject.new(p, os, arch)
                     spec = p.to_deb_spec
                   end

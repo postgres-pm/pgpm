@@ -4,22 +4,22 @@ class Pgsodium < Pgpm::Package
   github "michelp/pgsodium"
 
   def build_dependencies
-      deps = case Pgpm::OS.in_scope.class.name
-      when "debian", "ubuntu"
-        ["libsodium-dev (>= 1.0.18)"]
-      when "rocky+epel-9", "redhat", "fedora"
-        ["libsodium-devel >= 1.0.18"]
-      end
-      super + deps
+    deps = case Pgpm::OS.in_scope.class.name
+           when "debian", "ubuntu"
+             ["libsodium-dev (>= 1.0.18)"]
+           when "rocky+epel-9", "redhat", "fedora"
+             ["libsodium-devel >= 1.0.18"]
+           end
+    super + deps
   end
 
   def dependencies
     deps = case Pgpm::OS.in_scope.class.name
-    when "debian", "ubuntu"
-      ["libsodium (>= 1.0.18)"]
-    when "rocky+epel-9", "redhat", "fedora"
-      ["libsodium >= 1.0.18"]
-    end
+           when "debian", "ubuntu"
+             ["libsodium (>= 1.0.18)"]
+           when "rocky+epel-9", "redhat", "fedora"
+             ["libsodium >= 1.0.18"]
+           end
     super + deps
   end
 

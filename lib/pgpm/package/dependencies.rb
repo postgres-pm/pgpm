@@ -5,7 +5,6 @@ require "tsort"
 module Pgpm
   class Package
     module Dependencies
-
       attr_accessor :postgres_major_version
 
       def build_dependencies
@@ -16,7 +15,7 @@ module Pgpm
             "postgresql-server-dev-#{postgres_major_version}",
             "postgresql-common"
           ]
-          if self.native?
+          if native?
             deps << "build-essential"
           end
         when "rocky+epel-9", "redhat", "fedora"
@@ -27,7 +26,7 @@ module Pgpm
       def dependencies
         case Pgpm::OS.in_scope.class.name
         when "debian", "ubuntu"
-          [ "postgresql-#{postgres_major_version}" ]
+          ["postgresql-#{postgres_major_version}"]
         when "rocky+epel-9", "redhat", "fedora"
           []
         end
@@ -71,7 +70,6 @@ module Pgpm
       def c_files_present?
         Dir.glob("*.c", base: source).any?
       end
-
     end
   end
 end

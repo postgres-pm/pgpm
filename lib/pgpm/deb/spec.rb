@@ -20,9 +20,10 @@ module Pgpm
         @package.sources
       end
 
-      def generate(template_name, pkg_type=:versioned)
+      def generate(template_name, pkg_type = :versioned)
         fn = "#{__dir__}/templates/#{template_name}.erb"
         raise "No such template: #{fn}" unless File.exist?(fn)
+
         erb = ERB.new(File.read(fn))
 
         # Uses pkg_type parameter (which is in scope) to generate
@@ -32,10 +33,10 @@ module Pgpm
 
       def source_version
         v = @package.version.to_s
-        v.match(/\Z\d+\.\d+\Z/) ?  v + ".0" : v
+        v.match(/\Z\d+\.\d+\Z/) ? "#{v}.0" : v
       end
 
-      def deb_pkg_name(type=:versioned)
+      def deb_pkg_name(type = :versioned)
         if type == :versioned
           "#{@package.name.gsub("_", "-")}+#{source_version}-pg#{@package.postgres_major_version}"
         else
@@ -47,23 +48,20 @@ module Pgpm
         # https://memgraph.com/blog/ship-it-on-arm64-or-is-it-aarch64
         # Debian suffixes are "amd64" and "arm64". Here we translate:
         case Pgpm::Arch.in_scope.name
-          when "amd64", "x86_64"
-            "amd64"
-          when "aarch64", "arm64"
-            "arm64"
+        when "amd64", "x86_64"
+          "amd64"
+        when "aarch64", "arm64"
+          "arm64"
         end
       end
 
       def cmds_if_not_empty(cmds, else_echo)
-        if cmds.nil? || cmds.empty?
-          return "\techo \"#{else_echo}\""
-        else
-          cmds.map! { |c| c.to_s }
-          cmds.map! { |c| c.gsub("$", "$$") }
-          return cmds.join("\t")
-        end
-      end
+        return "\techo \"#{else_echo}\"" if cmds.nil? || cmds.empty?
 
+        cmds.map!(&:to_s)
+        cmds.map! { |c| c.gsub("$", "$$") }
+        cmds.join("\t")
+      end
     end
   end
 end

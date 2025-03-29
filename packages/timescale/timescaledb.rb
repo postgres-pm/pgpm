@@ -12,33 +12,33 @@ module Timescale
     end
 
     def description
-      "An open-source time-series SQL database optimized for fast ingest and " +
-      "complex queries"
+      "An open-source time-series SQL database optimized for fast ingest and " \
+        "complex queries"
     end
 
     def summary
-        "TimescaleDB is an open-source database designed to make SQL "        +
-        "scalable for time-series data. It is engineered up from PostgreSQL " +
-        "and packaged as a PostgreSQL extension, providing automatic "        +
-        "partitioning across time and space (partitioning key), as well as "  +
+      "TimescaleDB is an open-source database designed to make SQL "        \
+        "scalable for time-series data. It is engineered up from PostgreSQL " \
+        "and packaged as a PostgreSQL extension, providing automatic "        \
+        "partitioning across time and space (partitioning key), as well as "  \
         "full SQL support."
     end
 
     def dependencies
       deps = case Pgpm::OS.in_scope.class.name
-      when "rocky+epel-9", "redhat", "fedora"
-        ["openssl"]
-      end
+             when "rocky+epel-9", "redhat", "fedora"
+               ["openssl"]
+             end
       super + deps
     end
 
     def build_dependencies
       deps = case Pgpm::OS.in_scope.class.name
-      when "debian", "ubuntu"
-        ["libssl-dev", "cmake"]
-      when "rocky+epel-9", "redhat", "fedora"
-        ["openssl-devel", "cmake"]
-      end
+             when "debian", "ubuntu"
+               %w[libssl-dev cmake]
+             when "rocky+epel-9", "redhat", "fedora"
+               %w[openssl-devel cmake]
+             end
       super + deps
     end
 
@@ -77,6 +77,5 @@ module Timescale
     def bootstrap_flags
       []
     end
-
   end
 end
