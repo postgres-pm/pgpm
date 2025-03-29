@@ -1,0 +1,14 @@
+Source: <%= deb_pkg_name(pkg_type) %>
+Description: <%= self.package.description %>
+Section: libs
+Priority: optional
+Maintainer: PGPM Debian maintainer <debian.maintainer@postgres.pm>
+Rules-Requires-Root: no
+Build-Depends: debhelper-compat (= 13), <%= self.package.build_dependencies.join(", ") %>
+Standards-Version: 4.6.2
+
+Package: <%= deb_pkg_name(pkg_type) %>
+Depends: <%= pkg_type == :versioned ? self.package.dependencies.join(", ") : deb_pkg_name(:versioned) %>
+Section: libdevel
+Architecture: <%= arch %>
+Description: <%= self.package.description %>

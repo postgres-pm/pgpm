@@ -1,0 +1,40 @@
+#!/usr/bin/make -f
+
+export DEB_BUILDDIR = $(CURDIR)
+export PGPM_BUILDROOT = $(CURDIR)
+export PG_CONFIG = $(shell /usr/bin/which pg_config)
+export PGPM_EXTENSION_NAME = "<%= self.package.extension_name %>"
+export PGPM_EXTENSION_VERSION = "<%= self.package.version %>"
+export PGPM_INSTALL_ROOT = "$(CURDIR)/debian/<%= deb_pkg_name(pkg_type) %>"
+
+<% if pkg_type == :versioned %>
+%:
+	dh $@
+
+override_dh_auto_configure:
+	echo " --> configuring"
+	<%= cmds_if_not_empty self.package.configure_steps, '...nothing to configure'  %>
+
+override_dh_auto_build:
+	echo " --> building"
+	<%= cmds_if_not_empty self.package.build_steps, '...nothing to build'  %>
+
+override_dh_auto_install:
+	echo " --> installing"
+	dh_auto_install
+	<%= cmds_if_not_empty self.package.install_steps, '...no custom install steps'  %>
+	chmod +x "$$DEB_BUILDDIR/prepare_artifacts.sh"
+	find $$PGPM_INSTALL_ROOT -type f | sort - | sed 's|^$$PGPM_INSTALL_ROOT||' > .pgpm_before | sort
+	./prepare_artifacts.sh
+
+<% else %>
+%:
+	dh $@
+
+override_dh_auto_install:
+	dh_auto_install
+	echo " --> INSTALL"
+	chmod +x "$$DEB_BUILDDIR/install_default_control.sh"
+	./install_default_control.sh
+
+<% end %>

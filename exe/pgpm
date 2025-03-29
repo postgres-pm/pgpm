@@ -101,35 +101,53 @@ module Pgpm
             exit(1)
           end
 
-          unless os.is_a?(Pgpm::OS::RedHat)
-            puts "#{os.name} is not a supported OS at this moment"
-            exit(1)
-          end
-          puts "Building #{pkgs.map { |p| "#{p.name}@#{p.version}" }.join(", ")} for Postgres #{matching_pgver}"
-          selected_pgdist = Postgres::RedhatBasedPgdg.new(matching_pgver.to_s)
+          if os.is_a? Pgpm::OS::Debian
+            puts "Building #{pkgs.map { |p| "#{p.name}@#{p.version}" }.join(", ")} for Postgres #{matching_pgver}"
+            selected_pgdist = Postgres::RedhatBasedPgdg.new(matching_pgver.to_s)
 
-          os.with_scope do
-            arch.with_scope do
-              selected_pgdist.with_scope do
-                pkgs = pkgs.flat_map(&:topologically_ordered_with_dependencies).uniq.reject(&:contrib?)
-
-                b = pkgs.reduce(nil) do |c, p|
-                  if p.broken?
-                    puts "Can't build a broken package #{p.name}@#{p.version}"
-                    exit(1)
+            os.with_scope do
+              arch.with_scope do
+                selected_pgdist.with_scope do
+                  spec = nil
+                  pkgs.reduce(nil) do |_c, p|
+                    p = Pgpm::ScopedObject.new(p, os, arch)
+                    spec = p.to_deb_spec
                   end
-                  p = Pgpm::ScopedObject.new(p, os, arch)
-                  spec = p.to_rpm_spec
-                  builder = Pgpm::RPM::Builder.new(spec)
-                  src_builder = builder.source_builder
-                  p = c.nil? ? src_builder : c.and_then(src_builder)
-                  p.and_then(builder.versionless_builder)
+                  builder = Pgpm::Deb::Builder.new(spec)
+                  builder.build
                 end
-
-                srpms = b.call
-                Pgpm::RPM::Builder.builder(srpms).call
               end
             end
+          elsif os.is_a? Pgpm::OS::RedHat
+            puts "Building #{pkgs.map { |p| "#{p.name}@#{p.version}" }.join(", ")} for Postgres #{matching_pgver}"
+            selected_pgdist = Postgres::RedhatBasedPgdg.new(matching_pgver.to_s)
+
+            os.with_scope do
+              arch.with_scope do
+                selected_pgdist.with_scope do
+                  pkgs = pkgs.flat_map(&:topologically_ordered_with_dependencies).uniq.reject(&:contrib?)
+
+                  b = pkgs.reduce(nil) do |c, p|
+                    if p.broken?
+                      puts "Can't build a broken package #{p.name}@#{p.version}"
+                      exit(1)
+                    end
+                    p = Pgpm::ScopedObject.new(p, os, arch)
+                    spec = p.to_rpm_spec
+                    builder = Pgpm::RPM::Builder.new(spec)
+                    src_builder = builder.source_builder
+                    p = c.nil? ? src_builder : c.and_then(src_builder)
+                    p.and_then(builder.versionless_builder)
+                  end
+
+                  srpms = b.call
+                  Pgpm::RPM::Builder.builder(srpms).call
+                end
+              end
+            end
+          else
+            puts "#{os.name} is not a supported OS at this moment"
+            exit(1)
           end
         end
 
