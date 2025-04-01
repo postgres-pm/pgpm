@@ -11,8 +11,8 @@ module Pgpm
         case Pgpm::OS.in_scope.class.name
         when "debian", "ubuntu"
           deps = [
-            "postgresql-#{postgres_version}",
-            "postgresql-server-dev-#{postgres_version}",
+            "postgresql-#{postgres_version(:major)}",
+            "postgresql-server-dev-#{postgres_version(:major)}",
             "postgresql-common"
           ]
           if native?
@@ -26,7 +26,7 @@ module Pgpm
       def dependencies
         case Pgpm::OS.in_scope.class.name
         when "debian", "ubuntu"
-          ["postgresql-#{postgres_major_version}"]
+          ["postgresql-#{postgres_version(:major)}"]
         when "rocky+epel-9", "redhat", "fedora"
           []
         end
@@ -42,6 +42,14 @@ module Pgpm
 
       def topologically_ordered_with_dependencies
         TopologicalPackageSorter.new([self, *all_requirements]).sorted_packages
+      end
+
+      def postgres_version(version_type=:major_minor)
+        v = Pgpm::Postgres::Distribution.in_scope.version
+        if version_type == :major
+          v = v.split(".").first
+        end
+        v
       end
 
       class TopologicalPackageSorter

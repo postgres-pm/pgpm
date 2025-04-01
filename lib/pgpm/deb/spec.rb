@@ -7,12 +7,10 @@ require "erb"
 module Pgpm
   module Deb
     class Spec
-      attr_reader :package, :release, :postgres_distribution
+      attr_reader :package, :release
 
       def initialize(package)
-        @postgres_distribution = Pgpm::Postgres::Distribution.in_scope
         @package = package
-        @package.postgres_version = @postgres_distribution.version
         @release = 1
       end
 

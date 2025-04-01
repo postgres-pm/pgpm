@@ -26,6 +26,3 @@ RUN echo 'MIRRORSITE=http://deb.debian.org/debian'  > /etc/pbuilderrc
 RUN echo 'AUTO_DEBSIGN=${AUTO_DEBSIGN:-no}'         > /root/.pbuilderrc
 RUN echo 'HOOKDIR=/var/cache/pbuilder/hooks'       >> /root/.pbuilderrc
 RUN --security=insecure pbuilder create
-
-COPY pbuilder_install_script.sh /root/pbuilder_install_script.sh
-RUN --security=insecure pbuilder execute --save-after-exec /root/pbuilder_install_script.sh

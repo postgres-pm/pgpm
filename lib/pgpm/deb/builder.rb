@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "English"
-require "debug"
 
 module Pgpm
   module Deb
@@ -13,7 +12,7 @@ module Pgpm
       end
 
       def build
-        pull_image
+        prepare_image
         start_container
         patch_pbuilder
 
@@ -32,9 +31,16 @@ module Pgpm
 
       private
 
-      # Depends on postgres version and arch
+      # Only depends on the arch -- this is the image being pulled from
+      # a remote repo, which is then used to build a local image with correct
+      # postgres version installed inside its pbuilder's chroot.
+      def base_image_name
+        "quay.io/qount25/pgpm-debian-#{@spec.arch}"
+      end
+
+      # Locally built image with correct chroot installed.
       def image_name
-        "quay.io/qount25/pgpm-debian-pg#{@spec.package.postgres_version}-#{@spec.arch}"
+        "pgpm-debian-pg#{@spec.package.postgres_version}-#{@spec.arch}"
       end
 
       def prepare_versioned_source
@@ -102,16 +108,43 @@ module Pgpm
         end
       end
 
-      def pull_image
+      def prepare_image
         puts "Checking if podman image exists..."
         # Check if image exists
         system("podman image exists #{image_name}")
-        if $CHILD_STATUS.to_i.positive? # image doesn't exist -- pull image from a remote repository
-          puts "  No. Pulling image #{image_name}..."
-          system("podman pull #{image_name}")
+        if $CHILD_STATUS.to_i.positive?
+          puts "  Image for the specific pg version doesn't exist. Will build."
+          system("podman image exists #{base_image_name}")
+          if $CHILD_STATUS.to_i.positive?
+            puts "  Base image doesn't exist. Pulling it..."
+            system("podman pull #{base_image_name}")
+          end
+          build_local_image
         else
           puts "  Yes, image #{image_name} already exists! OK"
         end
+      end
+
+      def build_local_image
+          puts "  Building local #{image_name}..."
+          system("podman create -it --privileged --tmpfs /tmp --name pgpm-deb-tmp #{base_image_name}")
+          system("podman start pgpm-deb-tmp")
+
+          # Generate pbuilder_install script.sh, copy it inside the image
+          pbuild_install_script_path = "#{@pgpm_dir}/pbuilder_install_script.sh"
+          puts "  Generating #{pbuild_install_script_path}..."
+          File.write "#{pbuild_install_script_path}", @spec.generate("pbuilder_install_script.sh")
+          system("podman container cp #{pbuild_install_script_path} pgpm-deb-tmp:/root/")
+
+          # This command installs relevant postgresql packages into the chroot
+          # base image inside the container (along with some other necessary
+          # packages) and saves chroot base image with these changes.
+          puts "  Updating chroot image..."
+          system("podman exec -w /root pgpm-deb-tmp /bin/bash -c 'fakeroot pbuilder execute --save-after-exec ./pbuilder_install_script.sh'")
+
+          system("podman stop pgpm-deb-tmp")
+          system("podman commit pgpm-deb-tmp #{image_name}")
+          system("podman container rm pgpm-deb-tmp")
       end
 
       def generate_deb_src_files(pkg_type = :versioned)

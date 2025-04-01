@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+# Run this script with:
+#     fakeroot pbuilder execute --save-after-exec ./pbuilder_install_script.sh
+
+apt update
+DEBIAN_FRONTEND=noninteractive apt -y install                                   \
+  build-essential curl lsb-release ca-certificates automake autopoint           \
+  autotools-dev bsdextrautils debhelper dh-autoreconf dh-strip-nondeterminism   \
+  dwz file gettext gettext-base groff-base intltool-debian libarchive-zip-perl  \
+  libdebhelper-perl libelf1t64 libfile-stripnondeterminism-perl libmagic-mgc    \
+  libmagic1t64 libpipeline1 libtool libuchardet0 man-db po-debconf
+
+### PostgreSQL installation
+#
+install -d /usr/share/postgresql-common/pgdg
+curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
+
+# Create the repository configuration file:
+sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+
+# Update the package lists:
+apt update
+
+# Install PostgreSQL. We first try a package with the full version name, but if
+# (such as postgresql-17.4), but if that's not the name that exists in the apt
+# repository, we use postgresql-17 instead.
+PG_VERSION=<%= @package.postgres_version(:major) %>
+
+# Checking if the output is empty, because `apt search` returns status 0
+# even if doesn't find anything.
+if [[ $(apt-cache search --names-only postgresql-<%= @package.postgres_version %> | head -c1 | wc -c) -ne 0 ]]; then
+  PG_VERSION=<%= @package.postgres_version %>
+fi
+
+apt -y install postgresql-$PG_VERSION            \
+               postgresql-server-dev-$PG_VERSION \
+               postgresql-common
