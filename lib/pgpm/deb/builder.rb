@@ -34,7 +34,7 @@ module Pgpm
 
       # Depends on postgres version and arch
       def image_name
-        "quay.io/qount25/pgpm-debian-pg#{@spec.package.postgres_major_version}-#{@spec.arch}"
+        "quay.io/qount25/pgpm-debian-pg#{@spec.package.postgres_version}-#{@spec.arch}"
       end
 
       def prepare_versioned_source
@@ -88,7 +88,7 @@ module Pgpm
 
         # 2. Determine the name of the .control file inside the versioned build
         deb_dir = "#{pbuilds_dir}/#{build_dir}/build/#{@spec.deb_pkg_name(:versioned)}-0/debian/#{@spec.deb_pkg_name(:versioned)}"
-        control_fn = "#{deb_dir}/usr/share/postgresql/#{@spec.package.postgres_major_version}/extension/#{@spec.package.extension_name}--#{@spec.package.version}.control"
+        control_fn = "#{deb_dir}/usr/share/postgresql/#{@spec.package.postgres_version}/extension/#{@spec.package.extension_name}--#{@spec.package.version}.control"
 
         # 3. Copy .control file to the source-default dir
         puts "Copying #{control_fn} into /root/pgpm/source-default/"

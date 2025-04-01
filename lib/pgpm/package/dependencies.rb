@@ -5,14 +5,14 @@ require "tsort"
 module Pgpm
   class Package
     module Dependencies
-      attr_accessor :postgres_major_version
+      attr_accessor :postgres_version
 
       def build_dependencies
         case Pgpm::OS.in_scope.class.name
         when "debian", "ubuntu"
           deps = [
-            "postgresql-#{postgres_major_version}",
-            "postgresql-server-dev-#{postgres_major_version}",
+            "postgresql-#{postgres_version}",
+            "postgresql-server-dev-#{postgres_version}",
             "postgresql-common"
           ]
           if native?

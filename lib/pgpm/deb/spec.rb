@@ -7,12 +7,12 @@ require "erb"
 module Pgpm
   module Deb
     class Spec
-      attr_reader :package, :release, :postgres_version, :postgres_distribution
+      attr_reader :package, :release, :postgres_distribution
 
       def initialize(package)
         @postgres_distribution = Pgpm::Postgres::Distribution.in_scope
         @package = package
-        @package.postgres_major_version = @postgres_distribution.major_version
+        @package.postgres_version = @postgres_distribution.version
         @release = 1
       end
 
@@ -38,9 +38,9 @@ module Pgpm
 
       def deb_pkg_name(type = :versioned)
         if type == :versioned
-          "#{@package.name.gsub("_", "-")}+#{source_version}-pg#{@package.postgres_major_version}"
+          "#{@package.name.gsub("_", "-")}+#{source_version}-pg#{@package.postgres_version}"
         else
-          "#{@package.name.gsub("_", "-")}-pg#{@package.postgres_major_version}"
+          "#{@package.name.gsub("_", "-")}-pg#{@package.postgres_version}"
         end
       end
 
