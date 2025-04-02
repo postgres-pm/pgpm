@@ -142,9 +142,20 @@ module Pgpm
           puts "  Updating chroot image..."
           system("podman exec -w /root pgpm-deb-tmp /bin/bash -c 'fakeroot pbuilder execute --save-after-exec ./pbuilder_install_script.sh'")
 
-          system("podman stop pgpm-deb-tmp")
+          # Exiting -- most likely error occurred because we cannot find the same
+          # postgresql version in the Debian repository. The bash script
+          # will do error reporting for us, so we just exit.
+          if $CHILD_STATUS.to_i.positive?
+            stop_and_remove_deb_tmp_image
+            exit 1
+          end
           system("podman commit pgpm-deb-tmp #{image_name}")
-          system("podman container rm pgpm-deb-tmp")
+          stop_and_remove_deb_tmp_image
+      end
+
+      def stop_and_remove_deb_tmp_image
+        system("podman stop pgpm-deb-tmp")
+        system("podman container rm pgpm-deb-tmp")
       end
 
       def generate_deb_src_files(pkg_type = :versioned)

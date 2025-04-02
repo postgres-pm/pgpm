@@ -11,8 +11,8 @@ module Pgpm
         case Pgpm::OS.in_scope.class.name
         when "debian", "ubuntu"
           deps = [
-            "postgresql-#{postgres_version(:major)}",
-            "postgresql-server-dev-#{postgres_version(:major)}",
+            "postgresql-#{postgres_version(:major)} (>= #{postgres_version})",
+            "postgresql-server-dev-#{postgres_version(:major)} (>= #{postgres_version})",
             "postgresql-common"
           ]
           if native?
@@ -26,7 +26,7 @@ module Pgpm
       def dependencies
         case Pgpm::OS.in_scope.class.name
         when "debian", "ubuntu"
-          ["postgresql-#{postgres_version(:major)}"]
+          ["postgresql-#{postgres_version(:major)} (>= #{postgres_version})"]
         when "rocky+epel-9", "redhat", "fedora"
           []
         end

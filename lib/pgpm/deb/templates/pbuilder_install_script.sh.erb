@@ -1,8 +1,19 @@
 #!/usr/bin/env bash
 
 # Run this script with:
-#     fakeroot pbuilder execute --save-after-exec ./pbuilder_install_script.sh
+#     fakeroot pbuilder execute --save-after-exec path/to/pbuilder_install_script.sh
 
+
+# This helps us avoid almost all instances of a very annoying:
+#
+#     ERROR: ld.so: object 'libfakeroot-sysv.so' from LD_PRELOAD cannot be preloaded...
+#
+# which isn't critical, but is polluting the output and makes debugging or
+# simply reading the output more difficult.
+export LD_PRELOAD="$(find / -name libfakeroot-sysv.so 2>/dev/null)"
+
+# These packages are universally required by pbuilder, so we pre-install them
+# inside our chroot.
 apt update
 DEBIAN_FRONTEND=noninteractive apt -y install                                   \
   build-essential curl lsb-release ca-certificates automake autopoint           \
@@ -19,20 +30,32 @@ curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://
 # Create the repository configuration file:
 sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 
+# Add archive repos containing all postgres versions deleted from
+# apt.postgresql.org. For example, when version 17.4 came out, version 17.3
+# was moved to the archive-apt source. We want all of them, because we don't know
+# ahead of time which version is going to be required by the user.
+apt_sources_fn="/etc/apt/sources.list.d/pgdg.list"
+cat $apt_sources_fn | grep 's|https://apt|https://apt-archive' >> $apt_sources_fn
+
 # Update the package lists:
 apt update
 
-# Install PostgreSQL. We first try a package with the full version name, but if
-# (such as postgresql-17.4), but if that's not the name that exists in the apt
-# repository, we use postgresql-17 instead.
-PG_VERSION=<%= @package.postgres_version(:major) %>
+PG_VERSION=<%= @package.postgres_version %>
+PG_MAJOR_VERSION=<%= @package.postgres_version(:major) %>
 
-# Checking if the output is empty, because `apt search` returns status 0
-# even if doesn't find anything.
-if [[ $(apt-cache search --names-only postgresql-<%= @package.postgres_version %> | head -c1 | wc -c) -ne 0 ]]; then
-  PG_VERSION=<%= @package.postgres_version %>
+# Let's check if the version we're trying to install actually exists.
+pkg="$(apt-cache madison postgresql-$PG_MAJOR_VERSION | grep " | $PG_VERSION" | head -n1)"
+if [[ "$pkg" == "" ]]; then
+  # If it doesn't we exit with status 1 and an explanation of an error. This will
+  # trigger the caller (spec.rb) to also exit with status one and, thus, will
+  # not build a local image -- because user-requested version of postgresql
+  # cannot be found in the repository.
+  >&2 echo "ERROR:"
+  >&2 echo "  Couldn't find postgresql-$PG_MAJOR_VERSION package with version $PG_VERSION."
+  exit 1
+else
+  pkg_version="$(echo "$pkg" | cut -d "|" -f 2 | xargs)"
+  apt -y install postgresql-$PG_MAJOR_VERSION=$pkg_version            \
+                 postgresql-server-dev-$PG_MAJOR_VERSION=$pkg_version \
+                 postgresql-common
 fi
-
-apt -y install postgresql-$PG_VERSION            \
-               postgresql-server-dev-$PG_VERSION \
-               postgresql-common
