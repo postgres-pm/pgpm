@@ -14,7 +14,6 @@ module Pgpm
       def build
         prepare_image
         start_container
-        patch_pbuilder
 
         prepare_versioned_source
         generate_deb_src_files(:versioned)
@@ -127,8 +126,11 @@ module Pgpm
 
       def build_local_image
           puts "  Building local #{image_name}..."
-          system("podman create -it --privileged --tmpfs /tmp --name pgpm-deb-tmp #{base_image_name}")
+          container_opts = "-it --privileged --tmpfs /tmp --name pgpm-deb-tmp"
+          system("podman create #{container_opts} #{base_image_name}")
           system("podman start pgpm-deb-tmp")
+
+          patch_pbuilder
 
           # Generate pbuilder_install script.sh, copy it inside the image
           pbuild_install_script_path = "#{@pgpm_dir}/pbuilder_install_script.sh"
@@ -194,7 +196,9 @@ module Pgpm
       # a result.
       def patch_pbuilder
         cmd = "sed -E -i \"s/(^function clean_subdirectories.*$)/\\1\\n  return/g\" /usr/lib/pbuilder/pbuilder-modules"
-        system("podman exec #{@container_name} /bin/bash -c '#{cmd}'")
+        system("podman exec pgpm-deb-tmp /bin/bash -c '#{cmd}'")
+        cmd = "sed -E -i \"s/if [[] [!] -f [\\\"]([$]BASETGZ)/if [ ! -d \\\"\\1/\" /usr/lib/pbuilder/pbuilder-modules"
+        system("podman exec pgpm-deb-tmp /bin/bash -c '#{cmd}'")
       end
 
       def run_build(pkg_type = :versioned)
