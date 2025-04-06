@@ -5,8 +5,6 @@ require "tsort"
 module Pgpm
   class Package
     module Dependencies
-      attr_accessor :postgres_version
-
       def build_dependencies
         case Pgpm::OS.in_scope.class.name
         when "debian", "ubuntu"
@@ -44,7 +42,7 @@ module Pgpm
         TopologicalPackageSorter.new([self, *all_requirements]).sorted_packages
       end
 
-      def postgres_version(version_type=:major_minor)
+      def postgres_version(version_type = :major_minor)
         v = Pgpm::Postgres::Distribution.in_scope.version
         if version_type == :major
           v = v.split(".").first

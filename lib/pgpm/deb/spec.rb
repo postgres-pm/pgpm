@@ -60,7 +60,6 @@ module Pgpm
         cmds.map! { |c| c.gsub("$", "$$") }
         cmds.join("\t")
       end
-
     end
   end
 end

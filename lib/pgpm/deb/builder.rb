@@ -125,34 +125,34 @@ module Pgpm
       end
 
       def build_local_image
-          puts "  Building local #{image_name}..."
-          container_opts = "-it --privileged --tmpfs /tmp --name pgpm-deb-tmp"
-          system("podman create #{container_opts} #{base_image_name}")
-          system("podman start pgpm-deb-tmp")
+        puts "  Building local #{image_name}..."
+        container_opts = "-it --privileged --tmpfs /tmp --name pgpm-deb-tmp"
+        system("podman create #{container_opts} #{base_image_name}")
+        system("podman start pgpm-deb-tmp")
 
-          patch_pbuilder
+        patch_pbuilder
 
-          # Generate pbuilder_install script.sh, copy it inside the image
-          pbuild_install_script_path = "#{@pgpm_dir}/pbuilder_install_script.sh"
-          puts "  Generating #{pbuild_install_script_path}..."
-          File.write "#{pbuild_install_script_path}", @spec.generate("pbuilder_install_script.sh")
-          system("podman container cp #{pbuild_install_script_path} pgpm-deb-tmp:/root/")
+        # Generate pbuilder_install script.sh, copy it inside the image
+        pbuild_install_script_path = "#{@pgpm_dir}/pbuilder_install_script.sh"
+        puts "  Generating #{pbuild_install_script_path}..."
+        File.write pbuild_install_script_path.to_s, @spec.generate("pbuilder_install_script.sh")
+        system("podman container cp #{pbuild_install_script_path} pgpm-deb-tmp:/root/")
 
-          # This command installs relevant postgresql packages into the chroot
-          # base image inside the container (along with some other necessary
-          # packages) and saves chroot base image with these changes.
-          puts "  Updating chroot image..."
-          system("podman exec -w /root pgpm-deb-tmp /bin/bash -c 'fakeroot pbuilder execute --save-after-exec ./pbuilder_install_script.sh'")
+        # This command installs relevant postgresql packages into the chroot
+        # base image inside the container (along with some other necessary
+        # packages) and saves chroot base image with these changes.
+        puts "  Updating chroot image..."
+        system("podman exec -w /root pgpm-deb-tmp /bin/bash -c 'fakeroot pbuilder execute --save-after-exec ./pbuilder_install_script.sh'")
 
-          # Exiting -- most likely error occurred because we cannot find the same
-          # postgresql version in the Debian repository. The bash script
-          # will do error reporting for us, so we just exit.
-          if $CHILD_STATUS.to_i.positive?
-            stop_and_remove_deb_tmp_image
-            exit 1
-          end
-          system("podman commit pgpm-deb-tmp #{image_name}")
+        # Exiting -- most likely error occurred because we cannot find the same
+        # postgresql version in the Debian repository. The bash script
+        # will do error reporting for us, so we just exit.
+        if $CHILD_STATUS.to_i.positive?
           stop_and_remove_deb_tmp_image
+          exit 1
+        end
+        system("podman commit pgpm-deb-tmp #{image_name}")
+        stop_and_remove_deb_tmp_image
       end
 
       def stop_and_remove_deb_tmp_image
