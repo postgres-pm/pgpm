@@ -28,6 +28,8 @@ module Timescale
       deps = case Pgpm::OS.in_scope.class.name
              when "rocky+epel-9", "redhat", "fedora"
                ["openssl"]
+             else
+               []
              end
       super + deps
     end
