@@ -21,7 +21,8 @@ MAINTAINER PGPM Debian Maintainer debian.maintainer@postgres.pm
 VOLUME /proc
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt update
-RUN apt install -y build-essential pbuilder fakeroot fakechroot vim ripgrep
+RUN apt install -y build-essential pbuilder fakeroot fakechroot
+RUN apt install -y vim ripgrep # for ease of debugging
 RUN echo 'MIRRORSITE=http://deb.debian.org/debian'  > /etc/pbuilderrc
 RUN echo 'AUTO_DEBSIGN=${AUTO_DEBSIGN:-no}'         > /root/.pbuilderrc
 RUN echo 'HOOKDIR=/var/cache/pbuilder/hooks'       >> /root/.pbuilderrc
