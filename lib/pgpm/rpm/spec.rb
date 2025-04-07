@@ -6,16 +6,12 @@ require "open-uri"
 module Pgpm
   module RPM
     class Spec
-      attr_reader :package, :release, :postgres_version, :postgres_distribution
+      attr_reader :package, :release
 
       def initialize(package)
         @postgres_distribution = Pgpm::Postgres::Distribution.in_scope
         @package = package
         @release = 1
-
-        # Needed in order to return correct dependencies for the selected
-        # version of postgres and selected OS.
-        @package.postgres_major_version = @postgres_distribution.major_version
       end
 
       def versionless

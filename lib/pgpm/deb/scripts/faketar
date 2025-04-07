@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+ARGS="$@"
+echo "faketar ${ARGS[@]}"
+
+if [[ " ${ARGS[*]} " =~ [[:space:]]-x[[:space:]] ]]; then # compress
+  # Replacing this command:
+  #     tar -x -p -f "$BASETGZ"
+  src="$4"
+  echo "Copying $src/* to $(pwd)"
+  cp -pur $src/* ./
+elif [[ " ${ARGS[*]} " =~ [[:space:]]-c[[:space:]] ]]; then # extract
+  # Replacing this command:
+  #     tar -c --use-compress-program "$COMPRESSPROG" -f "${BASETGZ}.tmp" ./*
+  target="$5"
+  src="."
+  mkdir $target
+  echo "Moving $src/* to $target/"
+  mv $src/* $target/
+  # Remove existing directory into which we move the contents.
+  # Otherwise, pbuilder (when it calls `mv`) will move $target inside it,
+  # instead of copying $target/* into it.
+  if [[ -d "${target%".tmp"}" ]]; then
+    rm -rf "${target%".tmp"}"
+  fi
+fi
