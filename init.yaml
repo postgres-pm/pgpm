@@ -1,0 +1,7 @@
+extension:
+  - name: pg_vector
+    github-repository: pgvector/pgvector
+---
+extension:
+  - name: pg_duckdb
+    github-repository: duckdb/pg_duckdb
